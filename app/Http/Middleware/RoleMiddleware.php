@@ -11,24 +11,31 @@ class RoleMiddleware
 {
     /**
      * Handle an incoming request.
-     * Parameter ...$roles memungkinkan kita memasukkan lebih dari satu role sekaligus.
+     *
+     * Support 2 mode:
+     *  - Role biasa:       role:admin, role:guru, role:bk, dll
+     *  - Koordinator BK:   role:koordinator_bk → cek role='bk' DAN is_koordinator_bk=true
+     *
+     * @param  string  ...$roles  Nama role atau 'koordinator_bk'
      */
     public function handle(Request $request, Closure $next, ...$roles): Response
     {
-        // Pastikan user sudah login
-        if (!Auth::check()) {
-            return redirect()->route('login');
+        $user = Auth::user();
+        $userRole = $user->role->nama_role;
+
+        $allowed = in_array($userRole, $roles);
+
+        // Khusus koordinator_bk: role di DB tetap 'bk', tapi harus punya flag is_koordinator_bk
+        if (! $allowed && in_array('koordinator_bk', $roles)) {
+            $allowed = ($userRole === 'bk' && $user->is_koordinator_bk);
         }
 
-        // Ambil nama_role dari user yang sedang login
-        $userRole = Auth::user()->role->nama_role;
+        abort_unless(
+            $allowed,
+            403,
+            'Akses Ditolak. Anda tidak memiliki hak untuk membuka halaman ini.'
+        );
 
-        // Cek apakah role user ada di dalam daftar role yang diizinkan untuk rute ini
-        if (in_array($userRole, $roles)) {
-            return $next($request); // Izinkan masuk
-        }
-
-        // Jika tidak punya akses, tampilkan halaman error 403 (Forbidden)
-        abort(403, 'Akses Ditolak. Anda tidak memiliki hak untuk membuka halaman ini.');
+        return $next($request);
     }
 }

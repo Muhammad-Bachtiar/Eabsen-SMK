@@ -11,7 +11,6 @@
         </div>
         <div class="card-body">
             
-            <!-- Info Header -->
             <div class="row mb-4">
                 <div class="col-md-6">
                     <table class="table table-borderless table-sm">
@@ -37,7 +36,6 @@
 
             <hr>
 
-            <!-- Tabel Detail Siswa -->
             <h6 class="mb-3">Daftar Kehadiran Siswa</h6>
             <div class="table-responsive">
                 <table class="table table-bordered table-striped">

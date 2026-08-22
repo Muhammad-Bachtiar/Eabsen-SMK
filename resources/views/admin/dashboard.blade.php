@@ -436,7 +436,7 @@
                     <a href="{{ route('admin.penugasan.create') }}" class="btn btn-outline-success btn-sm text-start">
                         <i class="bi bi-mortarboard-fill me-2"></i> Buat Penugasan
                     </a>
-                    <a href="{{ route('admin.jenis-pelanggaran.create') }}" class="btn btn-outline-warning btn-sm text-start">
+                    <a href="{{ route('koordinator-bk.jenis-pelanggaran.create') }}" class="btn btn-outline-warning btn-sm text-start">
                         <i class="bi bi-exclamation-triangle-fill me-2"></i> Input Jenis Pelanggaran
                     </a>
                 </div>

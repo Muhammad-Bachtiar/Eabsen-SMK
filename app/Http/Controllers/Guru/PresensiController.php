@@ -26,7 +26,7 @@ class PresensiController extends Controller
                             ->orderBy('created_at', 'desc')
                             ->get();
 
-        return view('guru.presensi.index', compact('riwayatPresensi'));
+        return view('admin.guru.presensi.index', compact('riwayatPresensi'));
     }
     public function create()
     {
@@ -38,7 +38,7 @@ class PresensiController extends Controller
             ->where('guru_id', $guruId)
             ->get();
 
-        return view('guru.presensi.create', compact('jadwals'));
+        return view('admin.guru.presensi.create', compact('jadwals'));
     }
 
     // Fungsi AJAX untuk memunculkan daftar siswa tanpa reload halaman
@@ -120,6 +120,6 @@ class PresensiController extends Controller
                         ->where('presensi_id', $id)
                         ->get();
 
-        return view('guru.presensi.show', compact('presensi', 'jams', 'details'));
+        return view('admin.guru.presensi.show', compact('presensi', 'jams', 'details'));
     }
 }

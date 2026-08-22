@@ -91,7 +91,7 @@
                 <div class="sidebar-header position-relative">
                     <div class="d-flex justify-content-between align-items-center">
                         <div class="logo">
-                            <a href="{{ route('dashboard') }}" class="d-flex align-items-center text-decoration-none">
+                            <a href="{{ route('admin.dashboard') }}" class="d-flex align-items-center text-decoration-none">
                                 <div>
                                     <h4 class="text-primary mb-0 fw-bold">E-Absen</h4>
                                 </div>
@@ -134,17 +134,32 @@
                 </div>
                 
                 <div class="sidebar-menu">
+                    @php
+                        $role = Auth::user()->role->nama_role ?? '';
+                        $isKoordinatorBK = Auth::user()->is_koordinator_bk ?? false;
+                    @endphp
                     <ul class="menu">
                         <!-- Menu Utama -->
                         
-                        <li class="sidebar-item {{ (request()->routeIs('dashboard') || request()->routeIs('admin.dashboard')) ? 'active' : '' }}">
-                            <a href="{{ route('dashboard') }}" class='sidebar-link'>
+                        <li class="sidebar-item {{ request()->routeIs('*.dashboard') ? 'active' : '' }}">
+                            @if($role == 'admin')
+                                <a href="{{ route('admin.dashboard') }}" class='sidebar-link'>
+                            @elseif($role == 'guru')
+                                <a href="{{ route('guru.dashboard') }}" class='sidebar-link'>
+                            @elseif($role == 'bk' && $isKoordinatorBK)
+                                <a href="{{ route('koordinator-bk.dashboard') }}" class='sidebar-link'>
+                            @elseif($role == 'bk')
+                                <a href="{{ route('bk.dashboard') }}" class='sidebar-link'>
+                            @else
+                                <a href="{{ route('dashboard') }}" class='sidebar-link'>
+                            @endif
                                 <i class="bi bi-grid-fill"></i>
                                 <span>Dashboard</span>
                             </a>
                         </li>
                         
-                        <!-- Master Data -->
+                        <!-- Master Data (Admin Only) -->
+                        @if($role == 'admin')
                         <li class="sidebar-title">Master Data</li>
                         
                         <li class="sidebar-item {{ request()->routeIs('admin.kelas.*') ? 'active' : '' }}">
@@ -198,16 +213,42 @@
                                 <span>Penugasan Guru BK</span>
                             </a>
                         </li>
+                        @endif
+
+                        <!-- Presensi Mengajar (Admin & Guru) -->
+                        @if(in_array($role, ['admin', 'guru']))
+                        <li class="sidebar-title">Presensi Mengajar</li>
+
+                        <li class="sidebar-item {{ request()->routeIs('guru.presensi.*') ? 'active' : '' }}">
+                            <a href="{{ route('guru.presensi.index') }}" class='sidebar-link'>
+                                <i class="bi bi-clipboard-check-fill"></i>
+                                <span>Presensi Siswa</span>
+                            </a>
+                        </li>
+                        @endif
 
                         <!-- Bimbingan Konseling -->
+                        @if(in_array($role, ['admin', 'bk']))
                         <li class="sidebar-title">Bimbingan Konseling</li>
 
-                        <li class="sidebar-item {{ request()->routeIs('admin.jenis-pelanggaran.*') ? 'active' : '' }}">
-                            <a href="{{ route('admin.jenis-pelanggaran.index') }}" class='sidebar-link'>
+                        @if($role == 'admin' || ($role == 'bk' && $isKoordinatorBK))
+                        <li class="sidebar-item {{ request()->routeIs('koordinator-bk.jenis-pelanggaran.*') ? 'active' : '' }}">
+                            <a href="{{ route('koordinator-bk.jenis-pelanggaran.index') }}" class='sidebar-link'>
                                 <i class="bi bi-exclamation-triangle-fill"></i>
                                 <span>Jenis Pelanggaran</span>
                             </a>
                         </li>
+                        @endif
+
+                        @if(in_array($role, ['admin', 'bk']))
+                        <li class="sidebar-item {{ request()->routeIs('bk.pelanggaran.*') ? 'active' : '' }}">
+                            <a href="{{ route('bk.pelanggaran.index') }}" class='sidebar-link'>
+                                <i class="bi bi-journal-text"></i>
+                                <span>Pelanggaran Siswa</span>
+                            </a>
+                        </li>
+                        @endif
+                        @endif
 
                         <!-- Akun & Logout -->
                         <li class="sidebar-title">Akun & Sistem</li>

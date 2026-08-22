@@ -17,7 +17,7 @@ class PelanggaranController extends Controller
                                         ->orderBy('tanggal_kejadian', 'desc')
                                         ->get();
 
-        return view('bk.pelanggaran.index', compact('pelanggarans'));
+        return view('admin.bk.pelanggaran.index', compact('pelanggarans'));
     }
 
     public function create()
@@ -26,7 +26,7 @@ class PelanggaranController extends Controller
         $siswas = Siswa::where('status', 'aktif')->orderBy('nama', 'asc')->get();
         $jenisPelanggarans = JenisPelanggaran::orderBy('nama_pelanggaran', 'asc')->get();
 
-        return view('bk.pelanggaran.create', compact('siswas', 'jenisPelanggarans'));
+        return view('admin.bk.pelanggaran.create', compact('siswas', 'jenisPelanggarans'));
     }
 
     public function store(Request $request)

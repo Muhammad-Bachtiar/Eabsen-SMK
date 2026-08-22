@@ -52,7 +52,6 @@
 
                 <hr>
 
-                <!-- Area ini awalnya ngumpet, bakal muncul setelah Kelas dipilih -->
                 <div id="areaSiswa" style="display: none;">
                     <h5 class="mb-3">Daftar Siswa</h5>
                     <div class="table-responsive">
@@ -65,7 +64,6 @@
                                 </tr>
                             </thead>
                             <tbody id="tempatSiswa">
-                                <!-- Data siswa akan disuntik dari AJAX ke sini -->
                             </tbody>
                         </table>
                     </div>

@@ -11,12 +11,12 @@ class JenisPelanggaranController extends Controller
     public function index()
     {
         $pelanggarans = JenisPelanggaran::orderBy('kategori', 'asc')->get();
-        return view('koordinator-bk.jenis-pelanggaran.index', compact('pelanggarans'));
+        return view('admin.koordinator-bk.jenis-pelanggaran.index', compact('pelanggarans'));
     }
 
     public function create()
     {
-        return view('koordinator-bk.jenis-pelanggaran.create');
+        return view('admin.koordinator-bk.jenis-pelanggaran.create');
     }
 
     public function store(Request $request)
@@ -34,7 +34,7 @@ class JenisPelanggaranController extends Controller
     public function edit($id)
     {
         $pelanggaran = JenisPelanggaran::findOrFail($id);
-        return view('koordinator-bk.jenis-pelanggaran.edit', compact('pelanggaran'));
+        return view('admin.koordinator-bk.jenis-pelanggaran.edit', compact('pelanggaran'));
     }
 
     public function update(Request $request, $id)

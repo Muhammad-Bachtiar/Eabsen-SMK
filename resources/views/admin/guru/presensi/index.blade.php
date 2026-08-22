@@ -1,4 +1,4 @@
-@extends('layouts.app') <!-- Sesuaikan dengan nama layout jenengan -->
+@extends('layouts.app')
 
 @section('content')
 <div class="container-fluid">
@@ -34,7 +34,6 @@
                             <td class="text-center">{{ $presensi->kelas->nama_kelas ?? '-' }}</td>
                             <td>{{ $presensi->mapel->nama_mapel ?? '-' }}</td>
                             <td class="text-center">
-                                <!-- Tombol detail (sementara pakai '#' dulu, nanti bisa kita kembangkan) -->
                                 <a href="{{ route('guru.presensi.show', $presensi->id) }}" class="btn btn-info btn-sm text-white">
                                     <i class="fas fa-eye"></i> Detail
                                 </a>
