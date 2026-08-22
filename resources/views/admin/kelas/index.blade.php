@@ -5,48 +5,57 @@
 
 @section('content')
 <section class="section">
-    <div class="card">
+    <div class="card shadow-sm">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="card-title">Daftar Kelas</h5>
-            <a href="{{ route('admin.kelas.create') }}" class="btn btn-primary btn-sm"><i class="bi bi-plus"></i> Tambah Kelas</a>
+            <h5 class="card-title mb-0">Daftar Kelas</h5>
+            <a href="{{ route('admin.kelas.create') }}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-circle me-1"></i> Tambah Kelas
+            </a>
         </div>
         <div class="card-body">
             @if(session('success'))
-                <div class="alert alert-success">{{ session('success') }}</div>
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle me-1"></i> {{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
             @endif
 
-            <table class="table table-striped" id="table1">
-                <thead>
-                    <tr>
-                        <th>No</th>
-                        <th>Nama Kelas</th>
-                        <th>Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($kelases as $kelas)
-                    <tr>
-                        <td>{{ $loop->iteration }}</td>
-                        <td>{{ $kelas->nama_kelas }}</td>
-                        <td>
-                            <!-- Tombol Edit -->
-                            <a href="{{ route('admin.kelas.edit', $kelas->id) }}" class="btn btn-warning btn-sm" class="d-inline">
-                                <i class="bi bi-pencil"></i> Edit
-                            </a>
-                            
-                            <!-- Tombol Hapus -->
-                            <form action="{{ route('admin.kelas.destroy', $kelas->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus kelas ini?')">
-                                @csrf
-                                @method('DELETE')
-                                <button class="btn btn-danger btn-sm">
-                                    <i class="bi bi-trash"></i> Hapus
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
+            <div class="table-responsive">
+                <table class="table table-striped table-hover datatable" id="tableKelas">
+                    <thead>
+                        <tr>
+                            <th style="width: 5%">No</th>
+                            <th>Nama Kelas</th>
+                            <th>Tingkat</th>
+                            <th>Jurusan</th>
+                            <th style="width: 15%">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($kelases as $kelas)
+                        <tr>
+                            <td>{{ $loop->iteration }}</td>
+                            <td><span class="fw-bold">{{ $kelas->nama_kelas }}</span></td>
+                            <td><span class="badge bg-light-primary text-primary">Tingkat {{ $kelas->tingkat }}</span></td>
+                            <td><span class="badge bg-light-info text-info">{{ $kelas->jurusan->nama_jurusan ?? '-' }}</span></td>
+                            <td>
+                                <a href="{{ route('admin.kelas.edit', $kelas->id) }}" class="btn btn-warning btn-sm">
+                                    <i class="bi bi-pencil-square"></i> Edit
+                                </a>
+                                
+                                <form action="{{ route('admin.kelas.destroy', $kelas->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus kelas ini?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button class="btn btn-danger btn-sm">
+                                        <i class="bi bi-trash"></i> Hapus
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </section>

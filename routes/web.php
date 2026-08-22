@@ -31,30 +31,36 @@ Route::middleware('auth')->group(function () {
 
 // --- GRUP RUTE ADMIN ---
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    // Rute Dashboard Admin
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    
     // Rute Master Data Mata Pelajaran
     Route::resource('mapel', \App\Http\Controllers\Admin\MataPelajaranController::class);
+    
     // Rute Master Data Kelas
     Route::resource('kelas', \App\Http\Controllers\Admin\KelasController::class);
-    // Rute Master Data Kelas
-    Route::resource('kelas', \App\Http\Controllers\Admin\KelasController::class);
+    
     // Rute Tambahan Import & Template Siswa
     Route::get('siswa/template', [\App\Http\Controllers\Admin\SiswaController::class, 'downloadTemplate'])->name('siswa.download-template');
     Route::post('siswa/import', [\App\Http\Controllers\Admin\SiswaController::class, 'import'])->name('siswa.import');
     // Rute Master Data Siswa
     Route::resource('siswa', \App\Http\Controllers\Admin\SiswaController::class);
-    // Rute Master Data Siswa
-    Route::resource('siswa', \App\Http\Controllers\Admin\SiswaController::class);
+    
     // Rute Import & Template Guru
     Route::get('guru/template', [\App\Http\Controllers\Admin\GuruController::class, 'downloadTemplate'])->name('guru.download-template');
     Route::post('guru/import', [\App\Http\Controllers\Admin\GuruController::class, 'import'])->name('guru.import');
     // Rute Master Data Guru
     Route::resource('guru', \App\Http\Controllers\Admin\GuruController::class);
-    // Rute Master Penugasan Guru (Baru)
+    
+    // Rute Master Penugasan Guru
     Route::resource('penugasan', \App\Http\Controllers\Admin\GuruMapelKelasController::class);
+    
     // Rute Master Jam Pelajaran
     Route::resource('jam-pelajaran', \App\Http\Controllers\Admin\JamPelajaranController::class);
+    
     // Rute Master Jenis Pelanggaran
     Route::resource('jenis-pelanggaran', \App\Http\Controllers\Admin\JenisPelanggaranController::class);
+    
     // Rute Master Penugasan BK
     Route::resource('penugasan-bk', \App\Http\Controllers\Admin\BkKelasController::class);
 });

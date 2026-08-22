@@ -11,28 +11,28 @@ class KelasController extends Controller
 {
     public function index()
     {
-        // Mengambil semua data kelas
-        $kelases = Kelas::all();
+        // Mengambil semua data kelas beserta relasi jurusan
+        $kelases = Kelas::with('jurusan')->get();
         return view('admin.kelas.index', compact('kelases'));
     }
 
     public function create()
     {
-        // Ambil data jurusan dari database
         $jurusans = Jurusan::all();
-        
-        // Kirim data jurusan ke halaman form
         return view('admin.kelas.create', compact('jurusans'));
     }
 
     public function store(Request $request)
     {
-        // Validasi agar nama kelas tidak boleh kosong dan tidak boleh dobel
         $request->validate([
-            'nama_kelas' => 'required|unique:kelas,nama_kelas'
+            'nama_kelas' => 'required|unique:kelas,nama_kelas',
+            'jurusan_id' => 'required|exists:jurusans,id',
+            'tingkat' => 'required|in:X,XI,XII',
         ], [
             'nama_kelas.required' => 'Nama kelas wajib diisi.',
-            'nama_kelas.unique' => 'Nama kelas ini sudah terdaftar.'
+            'nama_kelas.unique' => 'Nama kelas ini sudah terdaftar.',
+            'jurusan_id.required' => 'Pilihan jurusan wajib diisi.',
+            'tingkat.required' => 'Tingkat kelas wajib dipilih.',
         ]);
 
         Kelas::create($request->all());
@@ -48,12 +48,15 @@ class KelasController extends Controller
 
     public function update(Request $request, Kelas $kelas)
     {
-        // Validasi update (mengecualikan ID kelas yang sedang diedit agar tidak terdeteksi dobel)
         $request->validate([
-            'nama_kelas' => 'required|unique:kelas,nama_kelas,' . $kelas->id
+            'nama_kelas' => 'required|unique:kelas,nama_kelas,' . $kelas->id,
+            'jurusan_id' => 'required|exists:jurusans,id',
+            'tingkat' => 'required|in:X,XI,XII',
         ], [
             'nama_kelas.required' => 'Nama kelas wajib diisi.',
-            'nama_kelas.unique' => 'Nama kelas ini sudah terdaftar.'
+            'nama_kelas.unique' => 'Nama kelas ini sudah terdaftar.',
+            'jurusan_id.required' => 'Pilihan jurusan wajib diisi.',
+            'tingkat.required' => 'Tingkat kelas wajib dipilih.',
         ]);
 
         $kelas->update($request->all());
