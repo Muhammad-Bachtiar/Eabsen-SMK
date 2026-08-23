@@ -227,6 +227,12 @@
                                 <span>Presensi Siswa</span>
                             </a>
                         </li>
+                        <li class="sidebar-item {{ request()->routeIs('guru.rekap_kelas.*') ? 'active' : '' }}">
+                            <a href="{{ route('guru.rekap_kelas.index') }}" class='sidebar-link'>
+                                <i class="bi bi-journal-bookmark-fill"></i>
+                                <span>Rekap Absen Kelas</span>
+                            </a>
+                        </li>
                         @endif
 
                         <!-- Bimbingan Konseling -->
@@ -242,10 +248,27 @@
                         </li>
                         @endif
 
-                        @if(in_array($role, ['admin', 'bk']))
+                        @if(in_array($role, ['bk', 'admin']))
+                        <!-- 1. Input Presensi Kelas Binaan (jenis = bk) -->
+                        <li class="sidebar-item {{ request()->routeIs('bk.presensi.*') ? 'active' : '' }}">
+                            <a href="{{ route('bk.presensi.index') }}" class='sidebar-link'>
+                                <i class="bi bi-clipboard-check-fill"></i>
+                                <span>Presensi Kelas Binaan</span>
+                            </a>
+                        </li>
+
+                        <!-- 2. Rekap Presensi Kelas (Gabungan Guru Mapel + BK) -->
+                        <li class="sidebar-item {{ request()->routeIs('bk.rekap_presensi.*') ? 'active' : '' }}">
+                            <a href="{{ route('bk.rekap_presensi.index') }}" class='sidebar-link'>
+                                <i class="bi bi-journal-text"></i>
+                                <span>Rekap Presensi Kelas</span>
+                            </a>
+                        </li>
+
+                        <!-- 3. Pelanggaran Siswa -->
                         <li class="sidebar-item {{ request()->routeIs('bk.pelanggaran.*') ? 'active' : '' }}">
                             <a href="{{ route('bk.pelanggaran.index') }}" class='sidebar-link'>
-                                <i class="bi bi-journal-text"></i>
+                                <i class="bi bi-exclamation-octagon-fill"></i>
                                 <span>Pelanggaran Siswa</span>
                             </a>
                         </li>

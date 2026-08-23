@@ -1,5 +1,5 @@
 @extends('layouts.app')
-
+@section('header_title', 'Presensi Siswa')
 @section('content')
 <div class="container-fluid">
     <div class="card shadow-sm border-0">

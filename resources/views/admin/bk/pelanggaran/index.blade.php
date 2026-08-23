@@ -1,8 +1,9 @@
 @extends('layouts.app')
 
+@section('header_title', 'Data Pelanggaran Siswa')
 @section('content')
 <div class="page-heading d-flex justify-content-between align-items-center">
-    <h3>Data Pelanggaran Siswa</h3>
+    
     <a href="{{ route('bk.pelanggaran.create') }}" class="btn btn-primary">
         <i class="fas fa-plus"></i> Catat Pelanggaran
     </a>

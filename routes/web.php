@@ -67,6 +67,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
 Route::middleware(['auth', 'role:admin,guru'])->prefix('guru')->name('guru.')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'guru'])->name('dashboard');
+    Route::get('rekap-kelas', [\App\Http\Controllers\Guru\RekapKelasController::class, 'index'])->name('rekap_kelas.index');
     Route::get('presensi', [\App\Http\Controllers\Guru\PresensiController::class, 'index'])->name('presensi.index');
     Route::get('presensi/create', [\App\Http\Controllers\Guru\PresensiController::class, 'create'])->name('presensi.create');
     Route::post('presensi/store', [\App\Http\Controllers\Guru\PresensiController::class, 'store'])->name('presensi.store');
@@ -96,6 +97,14 @@ Route::middleware(['auth', 'role:admin,bk'])->prefix('koordinator-bk')->name('ko
 
 Route::middleware(['auth', 'role:admin,bk'])->prefix('bk')->name('bk.')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'bk'])->name('dashboard');
+
+    // 1. Presensi Kelas Binaan (jenis = bk)
+    Route::get('presensi', [\App\Http\Controllers\Bk\PresensiBkController::class, 'index'])->name('presensi.index');
+    Route::get('presensi/create', [\App\Http\Controllers\Bk\PresensiBkController::class, 'create'])->name('presensi.create');
+    Route::post('presensi', [\App\Http\Controllers\Bk\PresensiBkController::class, 'store'])->name('presensi.store');
+    Route::get('get-siswa/{kelasId}', [\App\Http\Controllers\Bk\PresensiBkController::class, 'getSiswa'])->name('get_siswa');
+    // 2. Rekap Presensi Tiap Kelas (Gabungan Mapel + BK)
+    Route::get('rekap-presensi', [\App\Http\Controllers\Bk\RekapPresensiBkController::class, 'index'])->name('rekap_presensi.index');
     Route::resource('pelanggaran', \App\Http\Controllers\Bk\PelanggaranController::class);
 });
 

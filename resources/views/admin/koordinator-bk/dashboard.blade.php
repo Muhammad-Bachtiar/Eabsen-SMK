@@ -1,9 +1,8 @@
 @extends('layouts.app')
 
+@section('header_title', 'Dashboard Koordinator BK')
 @section('content')
-<div class="page-heading">
-    <h3>Dashboard Koordinator BK</h3>
-</div>
+
 <div class="page-content">
     <section class="row">
         <div class="col-12">

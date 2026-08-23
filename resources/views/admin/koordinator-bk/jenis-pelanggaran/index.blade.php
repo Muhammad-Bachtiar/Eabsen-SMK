@@ -1,5 +1,5 @@
 @extends('layouts.app')
-
+@section('header_title', 'Jenis Pelanggaran')
 @section('content')
 <section class="section">
     <div class="card">

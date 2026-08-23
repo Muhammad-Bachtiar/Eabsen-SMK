@@ -89,7 +89,33 @@ class DashboardController extends Controller
     public function guru()
     {
         $user = Auth::user();
-        return view('admin.guru.dashboard', compact('user'));
+
+    // 1. Ambil daftar kelas & mapel yang diampu dari relasi guru_mapel_kelas
+    // Asumsi model GuruMapelKelas atau query builder langsung ke tabel guru_mapel_kelas
+    $mapelDiampu = \DB::table('guru_mapel_kelas')
+        ->join('kelas', 'guru_mapel_kelas.kelas_id', '=', 'kelas.id')
+        ->join('mata_pelajarans', 'guru_mapel_kelas.mapel_id', '=', 'mata_pelajarans.id')
+        ->where('guru_mapel_kelas.guru_id', $user->id)
+        ->select('kelas.nama_kelas', 'mata_pelajarans.nama_mapel', 'guru_mapel_kelas.kelas_id')
+        ->get();
+
+    // 2. Ambil riwayat presensi yang diinput oleh guru ini
+    $riwayatPresensi = \App\Models\Presensi::with(['kelas', 'mapel'])
+        ->where('dicatat_oleh', $user->id)
+        ->orderBy('tanggal', 'desc')
+        ->limit(5)
+        ->get();
+
+    // 3. Ringkasan angka statistik
+    $totalKelas = $mapelDiampu->pluck('kelas_id')->unique()->count();
+    $totalMapel = $mapelDiampu->pluck('nama_mapel')->unique()->count();
+    $presensiHariIni = \App\Models\Presensi::where('dicatat_oleh', $user->id)
+        ->whereDate('tanggal', now()->toDateString())
+        ->count();
+
+    return view('admin.guru.dashboard', compact(
+        'user', 'mapelDiampu', 'riwayatPresensi', 'totalKelas', 'totalMapel', 'presensiHariIni'
+    ));
     }
 
     /**
@@ -104,7 +130,40 @@ class DashboardController extends Controller
             return view('admin.koordinator-bk.dashboard', compact('user'));
         }
 
-        return view('admin.bk.dashboard', compact('user'));
+        $kelasBinaan = \DB::table('bk_kelas')
+        ->join('kelas', 'bk_kelas.kelas_id', '=', 'kelas.id')
+        ->where('bk_kelas.bk_user_id', $user->id)
+        ->select('kelas.id', 'kelas.nama_kelas')
+        ->get();
+
+    $totalSiswaBinaan = 0;
+    if ($kelasBinaan->isNotEmpty()) {
+        $totalSiswaBinaan = \App\Models\Siswa::whereIn('kelas_id', $kelasBinaan->pluck('id'))->count();
+    }
+
+    // 2. Ringkasan Statistik Pelanggaran
+    $totalPelanggaran = \App\Models\PelanggaranSiswa::count();
+    $kasusMenunggu    = \App\Models\PelanggaranSiswa::where('status', 'menunggu_persetujuan')->count();
+    $kasusSelesai     = \App\Models\PelanggaranSiswa::where('status', 'disetujui')->count();
+
+    // 3. 5 Pelanggaran Terbaru
+    $pelanggaranTerbaru = \App\Models\PelanggaranSiswa::with(['siswa', 'jenisPelanggaran'])
+        ->orderBy('created_at', 'desc')
+        ->limit(5)
+        ->get();
+
+    // 4. Top 5 Siswa Sering Alpha
+    $topAlpha = \App\Models\PresensiDetail::with('siswa.kelas')
+        ->where('status', 'Alpha')
+        ->selectRaw('siswa_id, count(*) as total_alpha')
+        ->groupBy('siswa_id')
+        ->orderBy('total_alpha', 'desc')
+        ->limit(5)
+        ->get();
+
+    return view('admin.bk.dashboard', compact(
+        'user', 'kelasBinaan', 'totalSiswaBinaan', 'totalPelanggaran', 
+        'kasusMenunggu', 'kasusSelesai', 'pelanggaranTerbaru', 'topAlpha'));
     }
 
     /**
