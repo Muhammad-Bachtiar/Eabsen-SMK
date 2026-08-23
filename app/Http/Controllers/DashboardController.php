@@ -131,6 +131,17 @@ class DashboardController extends Controller
     public function kepalaSekolah()
     {
         $user = Auth::user();
-        return view('admin.kepsek.dashboard', compact('user'));
-    }
+    $totalHadir = \App\Models\PresensiDetail::whereDate('created_at', now())->where('status', 'Hadir')->count();
+    $totalIzin  = \App\Models\PresensiDetail::whereDate('created_at', now())->where('status', 'Izin')->count();
+    $totalSakit = \App\Models\PresensiDetail::whereDate('created_at', now())->where('status', 'Sakit')->count();
+    $totalAlpha = \App\Models\PresensiDetail::whereDate('created_at', now())->where('status', 'Alpha')->count();
+
+    // Tarik ringkasan pelanggaran
+    $totalPelanggaran = \App\Models\PelanggaranSiswa::where('status', 'disetujui')->count();
+    $menungguApproval = \App\Models\PelanggaranSiswa::where('status', 'menunggu_persetujuan')->count();
+
+    return view('admin.kepsek.dashboard', compact(
+        'user', 'totalHadir', 'totalIzin', 'totalSakit', 'totalAlpha', 'totalPelanggaran', 'menungguApproval'
+    ));
+}
 }

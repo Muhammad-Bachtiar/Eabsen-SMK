@@ -150,6 +150,8 @@
                                 <a href="{{ route('koordinator-bk.dashboard') }}" class='sidebar-link'>
                             @elseif($role == 'bk')
                                 <a href="{{ route('bk.dashboard') }}" class='sidebar-link'>
+                            @elseif($role == 'waka_kesiswaan')
+                                <a href="{{ route('waka.dashboard') }}" class='sidebar-link'>
                             @else
                                 <a href="{{ route('dashboard') }}" class='sidebar-link'>
                             @endif
@@ -248,6 +250,44 @@
                             </a>
                         </li>
                         @endif
+                        
+                        @endif
+                        @if(in_array($role, ['admin', 'waka_kesiswaan']))
+                        <li class="sidebar-title">Kesiswaan</li>
+
+                        <li class="sidebar-item {{ request()->routeIs('waka.rekap_presensi.*') ? 'active' : '' }}">
+                            <a href="{{ route('waka.rekap_presensi.index') }}" class='sidebar-link'>
+                                <i class="bi bi-file-earmark-bar-graph-fill"></i>
+                                <span>Rekap Presensi Harian</span>
+                            </a>
+                        </li>
+
+                        <li class="sidebar-item {{ request()->routeIs('waka.approval.*') ? 'active' : '' }}">
+                            <a href="{{ route('waka.approval.index') }}" class='sidebar-link'>
+                                <i class="bi bi-check2-square"></i>
+                                <span>Persetujuan Pelanggaran</span>
+                            </a>
+                        </li>
+                        @endif
+                        <!-- Executive Monitoring (Admin & Kepala Sekolah) -->
+                        @if(in_array($role, ['admin', 'kepala_sekolah']))
+                        <li class="sidebar-title">Laporan & Eksekutif</li>
+
+                        <li class="sidebar-item {{ request()->routeIs('kepsek.rekap_presensi.*') ? 'active' : '' }}">
+                            <a href="{{ route('kepsek.rekap_presensi.index') }}" class='sidebar-link'>
+                                <i class="bi bi-file-earmark-bar-graph-fill"></i>
+                                <span>Rekap Presensi Harian</span>
+                            </a>
+                        </li>
+
+                        <li class="sidebar-item {{ request()->routeIs('kepsek.pelanggaran.*') ? 'active' : '' }}">
+                            <a href="{{ route('kepsek.pelanggaran.index') }}" class='sidebar-link'>
+                                <i class="bi bi-journal-check"></i>
+                                <span>Ringkasan Pelanggaran</span>
+                            </a>
+                        </li>
+                        @elseif($role == 'kepala_sekolah')
+                        <a href="{{ route('kepsek.dashboard') }}" class='sidebar-link'>
                         @endif
 
                         <!-- Akun & Logout -->

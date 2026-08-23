@@ -106,8 +106,15 @@ Route::middleware(['auth', 'role:admin,bk'])->prefix('bk')->name('bk.')->group(f
 */
 
 Route::middleware(['auth', 'role:admin,waka_kesiswaan'])->prefix('waka')->name('waka.')->group(function () {
+    // Dashboard Waka Kesiswaan
     Route::get('/dashboard', [DashboardController::class, 'waka'])->name('dashboard');
+    // Rekap Presensi Seluruh Kelas/Jurusan
+    Route::get('rekap-presensi', [\App\Http\Controllers\Waka\RekapPresensiController::class, 'index'])->name('rekap_presensi.index');
     // Nanti rute persetujuan (approval) pelanggaran masuk ke sini
+    // Daftar Pelanggaran yang Butuh Persetujuan
+    Route::get('approval-pelanggaran', [\App\Http\Controllers\Waka\ApprovalPelanggaranController::class, 'index'])->name('approval.index');
+    // Proses Setujui / Tolak
+    Route::post('approval-pelanggaran/{id}/proses', [\App\Http\Controllers\Waka\ApprovalPelanggaranController::class, 'proses'])->name('approval.proses');
 });
 
 /*
@@ -119,4 +126,9 @@ Route::middleware(['auth', 'role:admin,waka_kesiswaan'])->prefix('waka')->name('
 Route::middleware(['auth', 'role:admin,kepala_sekolah'])->prefix('kepsek')->name('kepsek.')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'kepalaSekolah'])->name('dashboard');
     // Nanti rute rekap laporan akhir masuk ke sini
+    // Rekap Presensi (Read-Only)
+    Route::get('rekap-presensi', [\App\Http\Controllers\Waka\RekapPresensiController::class, 'index'])->name('rekap_presensi.index');
+
+    // Ringkasan Pelanggaran (Read-Only)
+    Route::get('ringkasan-pelanggaran', [\App\Http\Controllers\Kepsek\LaporanPelanggaranController::class, 'index'])->name('pelanggaran.index');
 });
