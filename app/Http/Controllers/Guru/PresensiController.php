@@ -15,28 +15,37 @@ class PresensiController extends Controller
 {
     public function index()
     {
-        // Cari tahu siapa guru yang lagi login
-        $guruId = \Illuminate\Support\Facades\Auth::id();
+        $user = Auth::id();
+        $userData = Auth::user();
+        $isAdmin = optional($userData->role)->nama_role === 'admin';
 
-        // Tarik data presensi khusus yang dicatat sama guru ini
-        // Kita urutkan dari tanggal yang paling baru
-        $riwayatPresensi = \App\Models\Presensi::with(['kelas', 'mapel'])
-                            ->where('dicatat_oleh', $guruId)
-                            ->orderBy('tanggal', 'desc')
+        $query = \App\Models\Presensi::with(['kelas', 'mapel', 'pencatat']);
+        
+        // Jika bukan admin, filter hanya buatan guru yang login
+        if (!$isAdmin) {
+            $query->where('dicatat_oleh', $user);
+        }
+
+        $riwayatPresensi = $query->orderBy('tanggal', 'desc')
                             ->orderBy('created_at', 'desc')
                             ->get();
 
         return view('admin.guru.presensi.index', compact('riwayatPresensi'));
     }
+
     public function create()
     {
-        // 1. Cari tahu siapa guru yang lagi login
-        $guruId = Auth::id();
+        $user = Auth::user();
+        $isAdmin = optional($user->role)->nama_role === 'admin';
 
-        // 2. Tarik jadwal ngajar khusus buat guru ini saja
-        $jadwals = GuruMapelKelas::with(['kelas', 'mapel'])
-            ->where('guru_id', $guruId)
-            ->get();
+        // Jika admin, ambil semua jadwal penugasan agar bisa testing
+        if ($isAdmin) {
+            $jadwals = GuruMapelKelas::with(['kelas', 'mapel', 'guru'])->get();
+        } else {
+            $jadwals = GuruMapelKelas::with(['kelas', 'mapel'])
+                ->where('guru_id', $user->id)
+                ->get();
+        }
 
         return view('admin.guru.presensi.create', compact('jadwals'));
     }
@@ -103,19 +112,25 @@ class PresensiController extends Controller
     }
     public function show($id)
     {
-        // Pastikan hanya guru yang bersangkutan yang bisa lihat detail ini
-        $guruId = \Illuminate\Support\Facades\Auth::id();
+        $user = \Illuminate\Support\Facades\Auth::user();
+        $isAdmin = optional($user->role)->nama_role === 'admin' || $user->role_id == 1;
 
-        $presensi = \App\Models\Presensi::with(['kelas', 'mapel'])
-                        ->where('dicatat_oleh', $guruId)
-                        ->findOrFail($id);
+        $query = \App\Models\Presensi::with(['kelas', 'mapel', 'pencatat']);
 
-        // Tarik jam pelajaran yang dicentang (jadikan array biar gampang ditampilin)
+        // Jika BUKAN admin, kunci akses hanya untuk guru pencatatnya sendiri
+        if (!$isAdmin) {
+            $query->where('dicatat_oleh', $user->id);
+        }
+
+        // Ambil data presensi (akan 404 HANYA jika ID memang tidak ada di DB, atau guru mencoba buka milik guru lain)
+        $presensi = $query->findOrFail($id);
+
+        // Tarik jam pelajaran yang dicentang
         $jams = \App\Models\PresensiJam::where('presensi_id', $id)
                         ->pluck('jam_pelajaran_id')
                         ->toArray();
 
-        // Tarik detail siswa berserta statusnya (pastikan model PresensiDetail punya relasi ke model Siswa)
+        // Tarik detail siswa beserta statusnya
         $details = \App\Models\PresensiDetail::with('siswa')
                         ->where('presensi_id', $id)
                         ->get();

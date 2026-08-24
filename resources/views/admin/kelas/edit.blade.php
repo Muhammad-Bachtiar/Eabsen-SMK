@@ -51,6 +51,22 @@
                     <label for="nama_kelas" class="form-label font-bold">Nama Kelas</label>
                     <input type="text" class="form-control" id="nama_kelas" name="nama_kelas" value="{{ old('nama_kelas', $kelas->nama_kelas) }}" required>
                 </div>
+
+                <!-- Form Group Wali Kelas -->
+                <div class="form-group mb-3">
+                    <label for="wali_kelas_id" class="form-label font-bold">Wali Kelas</label>
+                    <select class="form-select" id="wali_kelas_id" name="wali_kelas_id">
+                        <option value="">-- Pilih Wali Kelas (Opsional) --</option>
+                        @foreach($gurus as $guru)
+                            <option value="{{ $guru->id }}" {{ (old('wali_kelas_id', $kelas->wali_kelas_id ?? '') == $guru->id) ? 'selected' : '' }}>
+                                {{ $guru->nama }} (NIP/NIK: {{ $guru->nip_nik ?? '-' }})
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('wali_kelas_id')
+                        <small class="text-danger">{{ $message }}</small>
+                    @enderror
+                </div>
                 
                 <button type="submit" class="btn btn-warning"><i class="bi bi-save me-1"></i> Update Data</button>
                 <a href="{{ route('admin.kelas.index') }}" class="btn btn-secondary"><i class="bi bi-arrow-left me-1"></i> Batal</a>

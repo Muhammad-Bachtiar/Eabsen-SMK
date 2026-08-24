@@ -10,45 +10,64 @@ use Carbon\Carbon;
 
 class RekapPresensiController extends Controller
 {
-    public function index(Request $request)
+public function index(Request $request)
     {
-        // Ambil tanggal filter (default hari ini)
-        $tanggal = $request->input('tanggal', Carbon::today()->toDateString());
+        $selectedTanggal = $request->input('tanggal', Carbon::today()->toDateString());
 
-        // Tarik semua kelas beserta jurusannya
+        // Ambil semua kelas beserta relasi jurusannya
         $kelases = Kelas::with('jurusan')->orderBy('nama_kelas', 'asc')->get();
 
-        // Olah data rekap per kelas pada tanggal tersebut
-        $rekapData = $kelases->map(function ($kelas) use ($tanggal) {
-            // Cari presensi utama berdasarkan kelas & tanggal
-            $presensi = Presensi::where('kelas_id', $kelas->id)
-                                ->whereDate('tanggal', $tanggal)
-                                ->first();
+        $rekapKelas = [];
 
-            if ($presensi) {
-                $details = PresensiDetail::where('presensi_id', $presensi->id)->get();
-                $hadir = $details->where('status', 'Hadir')->count();
-                $izin  = $details->where('status', 'Izin')->count();
-                $sakit = $details->where('status', 'Sakit')->count();
-                $alpha = $details->where('status', 'Alpha')->count();
-                $statusInput = 'Sudah Diisi';
-            } else {
-                $hadir = $izin = $sakit = $alpha = 0;
-                $statusInput = 'Belum Diisi';
+        foreach ($kelases as $kelas) {
+            // 1. Cek apakah ada sesi presensi (Mapel/BK) pada kelas dan tanggal ini
+            $presensiIds = Presensi::where('kelas_id', $kelas->id)
+                ->whereDate('tanggal', $selectedTanggal)
+                ->pluck('id');
+
+            $sudahDiisi = $presensiIds->isNotEmpty();
+
+            // 2. Jika presensi sudah diisi, hitung konsolidasi status unik per siswa
+            $hadir = 0; $izin = 0; $sakit = 0; $alpha = 0; $totalTerdata = 0;
+
+            if ($sudahDiisi) {
+                // Ambil semua detail presensi siswa pada sesi-sesi kelas & tanggal tersebut
+                $details = PresensiDetail::whereIn('presensi_id', $presensiIds)->get();
+
+                // Kelompokkan per siswa agar 1 siswa hanya terhitung 1 status harian
+                $groupedBySiswa = $details->groupBy('siswa_id');
+
+                foreach ($groupedBySiswa as $siswaId => $siswaDetails) {
+                    $statuses = $siswaDetails->pluck('status')->map(fn($s) => strtolower($s));
+
+                    // Prioritas penentuan status harian siswa: Alpha > Sakit > Izin > Hadir
+                    if ($statuses->contains('alpa')) {
+                        $alpha++;
+                    } elseif ($statuses->contains('sakit')) {
+                        $sakit++;
+                    } elseif ($statuses->contains('izin')) {
+                        $izin++;
+                    } else {
+                        $hadir++;
+                    }
+                }
+
+                $totalTerdata = $groupedBySiswa->count();
             }
 
-            return [
-                'kelas' => $kelas->nama_kelas,
-                'jurusan' => $kelas->jurusan->nama_jurusan ?? '-',
-                'hadir' => $hadir,
-                'izin' => $izin,
-                'sakit' => $sakit,
-                'alpha' => $alpha,
-                'total_siswa' => $hadir + $izin + $sakit + $alpha,
-                'status_input' => $statusInput,
+            $rekapKelas[] = (object) [
+                'kelas_id'      => $kelas->id,
+                'nama_kelas'    => $kelas->nama_kelas,
+                'nama_jurusan'  => $kelas->jurusan->nama_jurusan ?? '-',
+                'sudah_diisi'   => $sudahDiisi,
+                'hadir'         => $hadir,
+                'izin'          => $izin,
+                'sakit'         => $sakit,
+                'alpha'         => $alpha,
+                'total_terdata' => $totalTerdata
             ];
-        });
+        }
 
-        return view('admin.waka.rekap_presensi.index', compact('rekapData', 'tanggal'));
+        return view('admin.waka.rekap_presensi.index', compact('selectedTanggal', 'rekapKelas'));
     }
 }

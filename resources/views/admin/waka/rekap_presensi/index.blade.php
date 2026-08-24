@@ -16,7 +16,7 @@
                             <label class="col-form-label fw-bold">Pilih Tanggal:</label>
                         </div>
                         <div class="col-auto">
-                            <input type="date" name="tanggal" class="form-control" value="{{ $tanggal }}">
+                            <input type="date" name="tanggal" class="form-control" value="{{ $selectedTanggal }}">
                         </div>
                         <div class="col-auto">
                             <button type="submit" class="btn btn-primary">
@@ -46,29 +46,25 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($rekapData as $index => $row)
-                                <tr>
-                                    <td>{{ $index + 1 }}</td>
-                                    <td><strong>{{ $row['kelas'] }}</strong></td>
-                                    <td>{{ $row['jurusan'] }}</td>
-                                    <td class="text-center"><span class="badge bg-success">{{ $row['hadir'] }}</span></td>
-                                    <td class="text-center"><span class="badge bg-info">{{ $row['izin'] }}</span></td>
-                                    <td class="text-center"><span class="badge bg-warning">{{ $row['sakit'] }}</span></td>
-                                    <td class="text-center"><span class="badge bg-danger">{{ $row['alpha'] }}</span></td>
-                                    <td class="text-center fw-bold">{{ $row['total_siswa'] }}</td>
-                                    <td class="text-center">
-                                        @if($row['status_input'] == 'Sudah Diisi')
-                                            <span class="badge bg-light-success text-success"><i class="fas fa-check-circle"></i> Sudah Diisi</span>
-                                        @else
-                                            <span class="badge bg-light-secondary text-secondary"><i class="fas fa-clock"></i> Belum Diisi</span>
-                                        @endif
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="9" class="text-center text-muted">Data kelas tidak ditemukan.</td>
-                                </tr>
-                                @endforelse
+                                @foreach($rekapKelas as $index => $row)
+                            <tr>
+                                <td>{{ $index + 1 }}</td>
+                                <td><strong>{{ $row->nama_kelas }}</strong></td>
+                                <td>{{ $row->nama_jurusan }}</td>
+                                <td class="text-center fw-bold text-success">{{ $row->hadir }}</td>
+                                <td class="text-center fw-bold text-info">{{ $row->izin }}</td>
+                                <td class="text-center fw-bold text-warning">{{ $row->sakit }}</td>
+                                <td class="text-center fw-bold text-danger">{{ $row->alpha }}</td>
+                                <td class="text-center fw-bold">{{ $row->total_terdata }}</td>
+                                <td class="text-center">
+                                    @if($row->sudah_diisi)
+                                        <span class="badge bg-success">Sudah Diisi</span>
+                                    @else
+                                        <span class="badge bg-secondary">Belum Diisi</span>
+                                    @endif
+                                </td>
+                            </tr>
+                            @endforeach
                             </tbody>
                         </table>
                     </div>

@@ -50,10 +50,21 @@
                     <label for="nama_kelas" class="form-label font-bold">Nama Kelas</label>
                     <input type="text" class="form-control" id="nama_kelas" name="nama_kelas" placeholder="Contoh: X RPL 1" value="{{ old('nama_kelas') }}" required>
                 </div>
-                
+                <div class="form-group mb-3">
+                <label for="wali_kelas_id" class="form-label font-bold">Wali Kelas</label>
+                    <select class="form-select" id="wali_kelas_id" name="wali_kelas_id">
+                        <option value="" selected>-- Pilih Wali Kelas (Opsional) --</option>
+                        @foreach($gurus as $guru)
+                            <option value="{{ $guru->id }}" {{ old('wali_kelas_id') == $guru->id ? 'selected' : '' }}>
+                                {{ $guru->nama }} (NIP/NIK: {{ $guru->nip_nik ?? '-' }})
+                            </option>
+                        @endforeach
+                    </select>
+                </div>                
                 <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i> Simpan</button>
                 <a href="{{ route('admin.kelas.index') }}" class="btn btn-secondary"><i class="bi bi-arrow-left me-1"></i> Batal</a>
             </form>
+            
         </div>
     </div>
 </section>

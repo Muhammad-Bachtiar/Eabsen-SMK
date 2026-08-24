@@ -105,6 +105,7 @@ Route::middleware(['auth', 'role:admin,bk'])->prefix('bk')->name('bk.')->group(f
     Route::get('get-siswa/{kelasId}', [\App\Http\Controllers\Bk\PresensiBkController::class, 'getSiswa'])->name('get_siswa');
     // 2. Rekap Presensi Tiap Kelas (Gabungan Mapel + BK)
     Route::get('rekap-presensi', [\App\Http\Controllers\Bk\RekapPresensiBkController::class, 'index'])->name('rekap_presensi.index');
+    Route::get('rekap-presensi/export-pdf', [\App\Http\Controllers\Bk\RekapPresensiBkController::class, 'exportPdf'])->name('rekap_presensi.export_pdf');
     Route::resource('pelanggaran', \App\Http\Controllers\Bk\PelanggaranController::class);
 });
 
