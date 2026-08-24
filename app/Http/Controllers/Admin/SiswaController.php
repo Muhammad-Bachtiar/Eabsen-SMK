@@ -55,67 +55,64 @@ class SiswaController extends Controller
         $siswa->update($request->all());
         return redirect()->route('admin.siswa.index')->with('success', 'Data Siswa berhasil diperbarui.');
     }
-    public function import(Request $request)
-    {
-     $request->validate([
-         'file' => 'required|mimes:xlsx,xls,csv|max:2048'
-     ]);
+    
+    // 1. Method Download Template File Fisik
+        public function downloadTemplate()
+        {
+            $filePath = public_path('template/template_siswa.xlsx');
+            
+            if (!file_exists($filePath)) {
+                return redirect()->back()->with('error', 'File template belum tersedia di folder public/template/');
+            }
 
-     try {
-         $file = $request->file('file');
+            return response()->download($filePath);
+        }
 
-         // Membaca file secara otomatis pakai Spatie
-         $rows = SimpleExcelReader::create($file->getRealPath(), $file->getClientOriginalExtension())->getRows();
+        // 2. Method Import Langsung Baca Array/Collection
+        public function import(Request $request)
+        {
+            $request->validate([
+                'file' => 'required|mimes:xlsx,xls,csv|max:2048'
+            ]);
 
-         $rows->each(function(array $row) {
-             // Cari kelas berdasarkan nama kelas di kolom Excel (misal: "X RPL 1")
-             $kelas = Kelas::where('nama_kelas', trim($row['kelas']))->first();
+            try {
+                $file = $request->file('file');
 
-             if ($kelas) {
-                 // updateOrCreate: Kalau NIS sudah ada, data diperbarui. Kalau belum, buat siswa baru.
-                 Siswa::updateOrCreate(
-                     ['nis' => $row['nis']], 
-                     [
-                         'kelas_id'      => $kelas->id,
-                         'nisn'          => $row['nisn'] ?? null,
-                         'nama'          => $row['nama'],
-                         'jenis_kelamin' => strtoupper(trim($row['jenis_kelamin'])),
-                         'status'        => 'aktif',
-                     ]
-                 );
-             }
-         });
+                // Membaca file Excel/CSV menggunakan SimpleExcelReader
+                $rows = SimpleExcelReader::create($file->getRealPath(), $file->getClientOriginalExtension())->getRows();
 
-         return redirect()->route('admin.siswa.index')->with('success', 'Mantap! Data Siswa berhasil di-import.');
-     } catch (\Exception $e) {
-         return back()->with('error', 'Gagal membaca file: ' . $e->getMessage());
-     }
-    }
-    public function downloadTemplate()
-    {
-        // Langsung bikin file beneran .xlsx biar rapi di Excel
-        $writer = SimpleExcelWriter::streamDownload('Template_Import_Siswa.xlsx');
+                $rows->each(function(array $row) {
+                    // Ambil NIS/NISN, Nama, Kelas, dan Jenis Kelamin dari baris Excel
+                    $nis       = $row['nis'] ?? $row['nisn'] ?? null;
+                    $nama      = $row['nama'] ?? $row['nama_siswa'] ?? null;
+                    $namaKelas = $row['kelas'] ?? $row['nama_kelas'] ?? null;
+                    $jk        = $row['jenis_kelamin'] ?? $row['jk'] ?? 'L';
 
-        // Bikin header (judul kolom)
-        $writer->addRow([
-            'nis' => 'nis',
-            'nisn' => 'nisn',
-            'nama' => 'nama',
-            'kelas' => 'kelas',
-            'jenis_kelamin' => 'jenis_kelamin'
-        ]);
+                    if (!empty($nama) && !empty($namaKelas) && !empty($nis)) {
+                        // Cari ID Kelas berdasarkan nama kelas di Excel
+                        $kelas = Kelas::where('nama_kelas', 'LIKE', '%' . trim($namaKelas) . '%')->first();
 
-        // Kasih baris contoh isian
-        $writer->addRow([
-            'nis' => '12345',
-            'nisn' => '0012345678',
-            'nama' => 'Budi Santoso',
-            'kelas' => 'X RPL 1', // Pastikan nama kelas sama persis dengan yang ada di database
-            'jenis_kelamin' => 'L'
-        ]);
+                        if ($kelas) {
+                            Siswa::updateOrCreate(
+                                ['nis' => $nis], // Gunakan 'nis' sebagai kunci pencarian utama
+                                [
+                                    'nisn'          => $row['nisn'] ?? $nis,
+                                    'nama'          => $nama,
+                                    'kelas_id'      => $kelas->id,
+                                    'jenis_kelamin' => strtoupper($jk),
+                                    'status'        => 'aktif',
+                                ]
+                            );
+                        }
+                    }
+                });
 
-        return $writer->toBrowser();
-    }
+                return redirect()->route('admin.siswa.index')->with('success', 'Data Siswa berhasil diimport!');
+
+            } catch (\Exception $e) {
+                return back()->with('error', 'Gagal membaca file: ' . $e->getMessage());
+            }
+        }
 
     public function destroy(Siswa $siswa)
     {

@@ -46,7 +46,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::resource('mapel', \App\Http\Controllers\Admin\MataPelajaranController::class);
     Route::resource('kelas', \App\Http\Controllers\Admin\KelasController::class);
 
-    Route::get('siswa/template', [\App\Http\Controllers\Admin\SiswaController::class, 'downloadTemplate'])->name('siswa.download-template');
+    Route::get('siswa/download-template', [\App\Http\Controllers\Admin\SiswaController::class, 'downloadTemplate'])->name('siswa.download-template');
     Route::post('siswa/import', [\App\Http\Controllers\Admin\SiswaController::class, 'import'])->name('siswa.import');
     Route::resource('siswa', \App\Http\Controllers\Admin\SiswaController::class);
 

@@ -43,6 +43,7 @@
                             <th style="width: 20%">NIP / NIK</th>
                             <th>Nama Lengkap</th>
                             <th>Email Login</th>
+                            <th>Sebagai</th>
                             <th>Status</th>
                             <th style="width: 15%">Aksi</th>
                         </tr>
@@ -61,9 +62,21 @@
                                 </div>
                             </td>
                             <td>{{ $guru->email }}</td>
+                           <td>
+                                @php
+                                    $roleName = strtolower($guru->role->nama_role ?? '');
+                                @endphp
+
+                                @if(in_array($roleName, ['bk', 'guru bk', 'guru_bk']))
+                                    <span class="badge bg-info text-dark">Guru BK</span>
+                                @else
+                                    <span class="badge bg-primary">Guru Mapel</span>
+                                @endif
+                            </td>
                             <td>
                                 <span class="badge bg-success">Aktif</span>
                             </td>
+
                             <td>
                                 <a href="{{ route('admin.guru.edit', $guru->id) }}" class="btn btn-warning btn-sm">
                                     <i class="bi bi-pencil-square"></i> Edit
