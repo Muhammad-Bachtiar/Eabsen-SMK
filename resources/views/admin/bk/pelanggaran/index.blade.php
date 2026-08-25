@@ -13,10 +13,6 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-body">
-                    
-                    @if(session('success'))
-                        <div class="alert alert-success">{{ session('success') }}</div>
-                    @endif
 
                     <div class="table-responsive">
                         <table class="table table-striped table-hover" id="table1">

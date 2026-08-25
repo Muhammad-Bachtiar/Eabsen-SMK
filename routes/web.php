@@ -134,11 +134,9 @@ Route::middleware(['auth', 'role:admin,waka_kesiswaan'])->prefix('waka')->name('
 */
 
 Route::middleware(['auth', 'role:admin,kepala_sekolah'])->prefix('kepsek')->name('kepsek.')->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'kepalaSekolah'])->name('dashboard');
+    Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'kepalaSekolah'])->name('dashboard');
     // Nanti rute rekap laporan akhir masuk ke sini
     // Rekap Presensi (Read-Only)
-    Route::get('rekap-presensi', [\App\Http\Controllers\Waka\RekapPresensiController::class, 'index'])->name('rekap_presensi.index');
-
-    // Ringkasan Pelanggaran (Read-Only)
+    Route::get('/rekap-presensi', [\App\Http\Controllers\Kepsek\RekapController::class, 'index'])->name('rekap_presensi.index');    // Ringkasan Pelanggaran (Read-Only)
     Route::get('ringkasan-pelanggaran', [\App\Http\Controllers\Kepsek\LaporanPelanggaranController::class, 'index'])->name('pelanggaran.index');
 });

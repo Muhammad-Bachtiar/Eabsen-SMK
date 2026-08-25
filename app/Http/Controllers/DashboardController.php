@@ -13,7 +13,9 @@ use App\Models\BkKelas;
 use App\Models\JamPelajaran;
 use App\Models\JenisPelanggaran;
 use App\Models\Presensi;
+use App\Models\PresensiDetail;
 use App\Models\PelanggaranSiswa;
+use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
@@ -178,29 +180,98 @@ class DashboardController extends Controller
     /**
      * Dashboard Waka Kesiswaan.
      */
-    public function waka()
+public function waka()
     {
-        $user = Auth::user();
-        return view('admin.waka.dashboard', compact('user'));
+        $today = Carbon::today()->toDateString();
+
+        // 1. Stat Cards
+        $totalKelas  = Kelas::count();
+        $totalSiswa  = Siswa::count();
+        
+        // Kelas yang sudah diabsensi hari ini
+        $kelasAbsenHariIni = Presensi::whereDate('tanggal', $today)
+            ->distinct('kelas_id')
+            ->count('kelas_id');
+
+        // Pelanggaran yang butuh persetujuan Waka
+        $pelanggaranPending = PelanggaranSiswa::where('status', 'menunggu_persetujuan')->count();
+
+        // 2. Ringkasan Presensi Harian Per Kelas (Untuk Widget Dashboard)
+        $kelases = Kelas::with('jurusan')->get();
+        $rekapPresensi = [];
+
+        foreach ($kelases as $k) {
+            $presensiIds = Presensi::where('kelas_id', $k->id)
+                ->whereDate('tanggal', $today)
+                ->pluck('id');
+
+            $sudahDiisi = $presensiIds->isNotEmpty();
+            $hadir = 0; $izin = 0; $sakit = 0; $alpha = 0;
+
+            if ($sudahDiisi) {
+                $details = PresensiDetail::whereIn('presensi_id', $presensiIds)->get();
+                $grouped = $details->groupBy('siswa_id');
+
+                foreach ($grouped as $siswaDetails) {
+                    $statuses = $siswaDetails->pluck('status')->map(fn($s) => strtolower($s));
+                    if ($statuses->contains('alpa')) $alpha++;
+                    elseif ($statuses->contains('sakit')) $sakit++;
+                    elseif ($statuses->contains('izin')) $izin++;
+                    else $hadir++;
+                }
+            }
+
+            $rekapPresensi[] = (object) [
+                'nama_kelas'   => $k->nama_kelas,
+                'nama_jurusan' => $k->jurusan->nama_jurusan ?? '-',
+                'sudah_diisi'  => $sudahDiisi,
+                'hadir'        => $hadir,
+                'izin'         => $izin,
+                'sakit'        => $sakit,
+                'alpha'        => $alpha,
+            ];
+        }
+
+        return view('admin.waka.dashboard', compact(
+            'totalKelas', 'totalSiswa', 'kelasAbsenHariIni', 'pelanggaranPending', 'rekapPresensi', 'today'
+        ));
     }
 
     /**
      * Dashboard Kepala Sekolah.
      */
-    public function kepalaSekolah()
+public function kepalaSekolah()
     {
-        $user = Auth::user();
-    $totalHadir = \App\Models\PresensiDetail::whereDate('created_at', now())->where('status', 'Hadir')->count();
-    $totalIzin  = \App\Models\PresensiDetail::whereDate('created_at', now())->where('status', 'Izin')->count();
-    $totalSakit = \App\Models\PresensiDetail::whereDate('created_at', now())->where('status', 'Sakit')->count();
-    $totalAlpha = \App\Models\PresensiDetail::whereDate('created_at', now())->where('status', 'Alpha')->count();
+        $today = Carbon::today()->toDateString();
 
-    // Tarik ringkasan pelanggaran
-    $totalPelanggaran = \App\Models\PelanggaranSiswa::where('status', 'disetujui')->count();
-    $menungguApproval = \App\Models\PelanggaranSiswa::where('status', 'menunggu_persetujuan')->count();
+        // 1. Stat Cards Eksekutif
+        $totalSiswa = Siswa::count();
+        $totalKelas = Kelas::count();
 
-    return view('admin.kepsek.dashboard', compact(
-        'user', 'totalHadir', 'totalIzin', 'totalSakit', 'totalAlpha', 'totalPelanggaran', 'menungguApproval'
-    ));
-}
+        // Ringkasan Total Absensi Hari Ini Seluruh Sekolah
+        $presensiHariIniIds = Presensi::whereDate('tanggal', $today)->pluck('id');
+        $detailsHariIni = PresensiDetail::whereIn('presensi_id', $presensiHariIniIds)->get();
+        $groupedSiswa = $detailsHariIni->groupBy('siswa_id');
+
+        $totalHadir = 0; $totalIzin = 0; $totalSakit = 0; $totalAlpha = 0;
+        foreach ($groupedSiswa as $siswaDetails) {
+            $statuses = $siswaDetails->pluck('status')->map(fn($s) => strtolower($s));
+            if ($statuses->contains('alpa')) $totalAlpha++;
+            elseif ($statuses->contains('sakit')) $totalSakit++;
+            elseif ($statuses->contains('izin')) $totalIzin++;
+            else $totalHadir++;
+        }
+
+        // Total Pelanggaran Terdaftar Bulan Ini
+        $pelanggaranBulanIni = PelanggaranSiswa::whereMonth('created_at', Carbon::now()->month)->count();
+
+        // 2. Daftar Kelas yang Belum Diabsen Hari Ini (Perhatian Kepsek)
+        $kelasSudahAbsenIds = Presensi::whereDate('tanggal', $today)->pluck('kelas_id')->unique();
+        $kelasBelumAbsen    = Kelas::whereNotIn('id', $kelasSudahAbsenIds)->get();
+
+        return view('admin.kepsek.dashboard', compact(
+            'totalSiswa', 'totalKelas', 'totalHadir', 'totalIzin', 'totalSakit', 'totalAlpha', 
+            'pelanggaranBulanIni', 'kelasBelumAbsen', 'today'
+        ));
+    }
 }

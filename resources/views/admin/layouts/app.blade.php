@@ -152,6 +152,8 @@
                                 <a href="{{ route('bk.dashboard') }}" class='sidebar-link'>
                             @elseif($role == 'waka_kesiswaan')
                                 <a href="{{ route('waka.dashboard') }}" class='sidebar-link'>
+                            @elseif($role == 'kepala_sekolah')
+                                <a href="{{ route('kepsek.dashboard') }}" class='sidebar-link'>
                             @else
                                 <a href="{{ route('dashboard') }}" class='sidebar-link'>
                             @endif
@@ -309,8 +311,6 @@
                                 <span>Ringkasan Pelanggaran</span>
                             </a>
                         </li>
-                        @elseif($role == 'kepala_sekolah')
-                        <a href="{{ route('kepsek.dashboard') }}" class='sidebar-link'>
                         @endif
 
                         <!-- Akun & Logout -->
