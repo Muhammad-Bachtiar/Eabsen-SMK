@@ -219,15 +219,9 @@
                         </li>
                         @endif
 
-                        <!-- Presensi Mengajar (Admin & Guru) -->
+                        <!-- Presensi Mengajar (Khusus Guru) -->
                         @if(in_array($role, ['admin', 'guru']))
                         <li class="sidebar-title">Presensi Mengajar</li>
-
-                        <li class="sidebar-item {{ request()->routeIs('guru.presensi.*') ? 'active' : '' }}">
-                            <a href="{{ route('guru.presensi.index') }}" class='sidebar-link'>
-                                <i class="bi bi-clipboard-check-fill"></i>
-                                <span>Presensi Siswa</span>
-                            </a>
                         </li>
                         <li class="sidebar-item {{ request()->routeIs('guru.rekap_kelas.*') ? 'active' : '' }}">
                             <a href="{{ route('guru.rekap_kelas.index') }}" class='sidebar-link'>

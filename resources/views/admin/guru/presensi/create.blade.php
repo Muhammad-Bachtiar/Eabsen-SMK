@@ -1,28 +1,25 @@
 @extends('layouts.app')
 
+@section('header_title', 'Dashboard')
+
 @section('content')
-<div class="container-fluid">
-    <div class="card">
-        <div class="card-header">
-            <h5 class="mb-0">Input Presensi Mata Pelajaran</h5>
-        </div>
-        <div class="card-body">
+<div class="page-content">
+    <div class="card shadow-sm border-0">
+        <div class="card-body pt-4">
             
-            @if(session('error'))
-                <div class="alert alert-danger">{{ session('error') }}</div>
-            @endif
+            <h5 class="fw-bold mb-3">Input Presensi Mata Pelajaran</h5>
 
             <form action="{{ route('guru.presensi.store') }}" method="POST">
                 @csrf
-                <div class="row mb-4">
+                <div class="row g-3 mb-3">
                     <div class="col-md-3">
-                        <label class="form-label">Tanggal</label>
+                        <label class="form-label text-muted small mb-1">Tanggal</label>
                         <input type="date" name="tanggal" class="form-control" value="{{ date('Y-m-d') }}" required>
                     </div>
                     <div class="col-md-5">
-                        <label class="form-label">Pilih Kelas & Mata Pelajaran</label>
+                        <label class="form-label text-muted small mb-1">Pilih Kelas & Mata Pelajaran</label>
                         <select class="form-select" id="pilihJadwal" required>
-                            <option value="">-- Pilih Jadwal Anda --</option>
+                            <option value="">-- Pilih Jadwal --</option>
                             @foreach($jadwals as $j)
                                 <option value="{{ $j->kelas_id }}" data-mapel="{{ $j->mapel_id }}">
                                     {{ $j->kelas->nama_kelas }} - {{ $j->mapel->nama_mapel }}
@@ -36,27 +33,26 @@
                 </div>
 
                 <div class="mb-4">
-                    <label class="form-label fw-bold mb-3">Centang Jam Pelajaran (Boleh lebih dari satu)</label>
+                    <label class="form-label text-muted small d-block mb-2">Centang Jam Pelajaran (Boleh lebih dari satu)</label>
                     <div class="d-flex flex-wrap gap-3">
                         @for($i = 1; $i <= 10; $i++)
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" name="jam[]" value="{{ $i }}" id="jam{{ $i }}">
-                            <label class="form-check-label" for="jam{{ $i }}">Jam {{ $i }}</label>
+                            <label class="form-check-label text-secondary" for="jam{{ $i }}">Jam {{ $i }}</label>
                         </div>
                         @endfor
                     </div>
                 </div>
 
-                <hr>
-
-                <div id="areaSiswa" style="display: none;">
-                    <h5 class="mb-3">Daftar Siswa</h5>
+                <!-- Step 1: Form Radio Button Pilihan Guru (Gambar 1) -->
+                <div id="areaSiswa" style="display: none;" class="mb-4">
+                    <h6 class="fw-bold text-primary mb-3">Daftar Siswa</h6>
                     <div class="table-responsive">
-                        <table class="table table-bordered table-hover">
-                            <thead>
+                        <table class="table table-bordered align-middle">
+                            <thead class="table-light">
                                 <tr>
-                                    <th width="5%" class="text-center">No</th>
-                                    <th width="35%">Nama Siswa</th>
+                                    <th width="5%">No</th>
+                                    <th>Nama Siswa</th>
                                     <th>Status Kehadiran</th>
                                 </tr>
                             </thead>
@@ -64,9 +60,58 @@
                             </tbody>
                         </table>
                     </div>
-                    <button type="submit" class="btn btn-primary mt-3"><i class="fas fa-save"></i> Simpan Presensi</button>
+
+                    <button type="submit" class="btn btn-primary px-4 mt-2">
+                        <i class="bi bi-save me-1"></i> Simpan Presensi
+                    </button>
                 </div>
             </form>
+
+            <!-- Step 2: Ringkasan Hasil Simpan Presensi (Gambar 2 - Otomatis muncul setelah klik Simpan) -->
+            @if(isset($presensiSelesai) && $presensiSelesai)
+            <hr class="my-5">
+            <div class="alert alert-success d-flex align-items-center mb-4">
+                <i class="bi bi-check-circle-fill fs-4 me-2"></i>
+                <div>
+                    Presensi untuk kelas <strong>{{ $presensiSelesai->kelas->nama_kelas }}</strong> ({{ $presensiSelesai->mapel->nama_mapel }}) telah berhasil disimpan!
+                </div>
+            </div>
+
+            <h5 class="fw-bold text-dark mb-3">Daftar Kehadiran Siswa</h5>
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th width="5%" class="text-center">No</th>
+                            <th width="20%">NIS</th>
+                            <th>Nama Siswa</th>
+                            <th width="15%" class="text-center">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($detailsSelesai as $index => $dt)
+                        <tr>
+                            <td class="text-center">{{ $index + 1 }}</td>
+                            <td>{{ $dt->siswa->nis ?? '-' }}</td>
+                            <td><strong>{{ $dt->siswa->nama ?? '-' }}</strong></td>
+                            <td class="text-center">
+                                @if(strtolower($dt->status) == 'hadir')
+                                    <span class="badge bg-success px-3 py-2">Hadir</span>
+                                @elseif(strtolower($dt->status) == 'sakit')
+                                    <span class="badge bg-warning text-dark px-3 py-2">Sakit</span>
+                                @elseif(strtolower($dt->status) == 'izin')
+                                    <span class="badge bg-primary px-3 py-2">Izin</span>
+                                @else
+                                    <span class="badge bg-danger px-3 py-2">Alpa</span>
+                                @endif
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            @endif
+
         </div>
     </div>
 </div>
@@ -78,7 +123,7 @@
         function loadSiswa(kelasId) {
             if(kelasId) {
                 $('#areaSiswa').show();
-                $('#tempatSiswa').html('<tr><td colspan="3" class="text-center">Memuat...</td></tr>');
+                $('#tempatSiswa').html('<tr><td colspan="3" class="text-center py-3">Memuat data siswa...</td></tr>');
 
                 $.ajax({
                     url: '/guru/presensi/get-siswa/' + kelasId,
@@ -89,25 +134,25 @@
                             $.each(response, function(index, siswa) {
                                 baris += `
                                     <tr>
-                                        <td class="text-center">${index + 1}</td>
-                                        <td>${siswa.nama} <br><small class="text-muted">${siswa.nis}</small></td>
+                                        <td>${index + 1}</td>
+                                        <td><strong>${siswa.nama}</strong><br><small class="text-muted">${siswa.nis ?? '-'}</small></td>
                                         <td>
                                             <div class="d-flex gap-4">
                                                 <div class="form-check">
                                                     <input class="form-check-input" type="radio" name="status[${siswa.id}]" value="hadir" id="h_${siswa.id}" checked>
-                                                    <label class="form-check-label text-success" for="h_${siswa.id}">Hadir</label>
+                                                    <label class="form-check-label text-success fw-bold" for="h_${siswa.id}">Hadir</label>
                                                 </div>
                                                 <div class="form-check">
                                                     <input class="form-check-input" type="radio" name="status[${siswa.id}]" value="sakit" id="s_${siswa.id}">
-                                                    <label class="form-check-label text-warning" for="s_${siswa.id}">Sakit</label>
+                                                    <label class="form-check-label text-warning fw-bold" for="s_${siswa.id}">Sakit</label>
                                                 </div>
                                                 <div class="form-check">
                                                     <input class="form-check-input" type="radio" name="status[${siswa.id}]" value="izin" id="i_${siswa.id}">
-                                                    <label class="form-check-label text-primary" for="i_${siswa.id}">Izin</label>
+                                                    <label class="form-check-label text-primary fw-bold" for="i_${siswa.id}">Izin</label>
                                                 </div>
                                                 <div class="form-check">
                                                     <input class="form-check-input" type="radio" name="status[${siswa.id}]" value="alpa" id="a_${siswa.id}">
-                                                    <label class="form-check-label text-danger" for="a_${siswa.id}">Alpa</label>
+                                                    <label class="form-check-label text-danger fw-bold" for="a_${siswa.id}">Alpa</label>
                                                 </div>
                                             </div>
                                         </td>
@@ -115,12 +160,12 @@
                                 `;
                             });
                         } else {
-                            baris = '<tr><td colspan="3" class="text-center text-danger">Belum ada data siswa di kelas ini.</td></tr>';
+                            baris = '<tr><td colspan="3" class="text-center text-danger py-3">Belum ada siswa di kelas ini.</td></tr>';
                         }
                         $('#tempatSiswa').html(baris);
                     },
                     error: function() {
-                        $('#tempatSiswa').html('<tr><td colspan="3" class="text-center text-danger">Gagal mengambil data dari server. Coba refresh halamannya.</td></tr>');
+                        $('#tempatSiswa').html('<tr><td colspan="3" class="text-center text-danger py-3">Gagal memuat siswa.</td></tr>');
                     }
                 });
             } else {
@@ -136,10 +181,6 @@
             $('#mapel_id').val(mapelId);
             loadSiswa(kelasId);
         });
-
-        if($('#pilihJadwal').val()) {
-            $('#pilihJadwal').trigger('change');
-        }
     });
 </script>
 @endpush

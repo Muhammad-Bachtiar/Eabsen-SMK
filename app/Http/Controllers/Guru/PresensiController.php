@@ -33,21 +33,27 @@ class PresensiController extends Controller
         return view('admin.guru.presensi.index', compact('riwayatPresensi'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $user = Auth::user();
-        $isAdmin = optional($user->role)->nama_role === 'admin';
+        $jadwals = GuruMapelKelas::with(['kelas', 'mapel'])
+            ->where('guru_id', $user->id)
+            ->get();
 
-        // Jika admin, ambil semua jadwal penugasan agar bisa testing
-        if ($isAdmin) {
-            $jadwals = GuruMapelKelas::with(['kelas', 'mapel', 'guru'])->get();
-        } else {
-            $jadwals = GuruMapelKelas::with(['kelas', 'mapel'])
-                ->where('guru_id', $user->id)
-                ->get();
+        $presensiSelesai = null;
+        $detailsSelesai  = [];
+
+        // Jika baru saja melakukan simpan presensi
+        if ($request->has('presensi_id')) {
+            $presensiSelesai = Presensi::with(['kelas', 'mapel'])->find($request->presensi_id);
+            if ($presensiSelesai) {
+                $detailsSelesai = PresensiDetail::with('siswa')
+                    ->where('presensi_id', $presensiSelesai->id)
+                    ->get();
+            }
         }
 
-        return view('admin.guru.presensi.create', compact('jadwals'));
+        return view('admin.guru.presensi.create', compact('jadwals', 'user', 'presensiSelesai', 'detailsSelesai'));
     }
 
     // Fungsi AJAX untuk memunculkan daftar siswa tanpa reload halaman
@@ -63,53 +69,45 @@ class PresensiController extends Controller
 
     public function store(Request $request)
     {
-        // Validasi isian guru
         $request->validate([
-            'tanggal' => 'required|date',
+            'tanggal'  => 'required|date',
             'kelas_id' => 'required',
             'mapel_id' => 'required',
-            'jam' => 'required|array', // Pastikan minimal ada 1 jam yang dicentang
-            'status' => 'required|array' 
+            'jam'      => 'required|array|min:1',
+            'status'   => 'required|array',
         ]);
 
-        try {
-            // Pakai database transaction, biar kalau ada error tengah jalan, datanya gak masuk setengah-setengah
-            DB::beginTransaction();
+        // 1. Simpan Header Presensi
+        $presensi = Presensi::create([
+            'tanggal'      => $request->tanggal,
+            'kelas_id'     => $request->kelas_id,
+            'mapel_id'     => $request->mapel_id,
+            'dicatat_oleh' => Auth::id(),
+        ]);
 
-            // 1. Bikin Induk Presensi
-            $presensi = Presensi::create([
-                'tanggal' => $request->tanggal,
-                'kelas_id' => $request->kelas_id,
-                'jenis' => 'mapel',
-                'mapel_id' => $request->mapel_id,
-                'dicatat_oleh' => Auth::id(), 
+        // 2. Simpan Jam Pelajaran
+        foreach ($request->jam as $j) {
+            \DB::table('presensi_jams')->insert([
+                'presensi_id'      => $presensi->id,
+                'jam_pelajaran_id' => $j,
             ]);
-
-            // 2. Simpan Jam Pelajaran (Bisa banyak)
-            foreach ($request->jam as $jamKe) {
-                PresensiJam::create([
-                    'presensi_id' => $presensi->id,
-                    'jam_pelajaran_id' => $jamKe  // <--- Ubah bagian ini
-                ]);
-            }
-
-            // 3. Simpan Status Absen Tiap Siswa
-            foreach ($request->status as $siswaId => $statusSiswa) {
-                PresensiDetail::create([
-                    'presensi_id' => $presensi->id,
-                    'siswa_id' => $siswaId,
-                    'status' => $statusSiswa
-                ]);
-            }
-
-            DB::commit();
-            return redirect()->back()->with('success', 'Mantap! Data absensi berhasil disimpan.');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->with('error', 'Waduh, gagal menyimpan absen: ' . $e->getMessage());
         }
+
+        // 3. Simpan Detail Kehadiran Siswa
+        foreach ($request->status as $siswaId => $st) {
+            PresensiDetail::create([
+                'presensi_id' => $presensi->id,
+                'siswa_id'    => $siswaId,
+                'status'      => $st,
+            ]);
+        }
+
+        // Redirect kembali ke form input dengan flag sukses & ID presensi terbuat
+        return redirect()->route('guru.presensi.create', [
+            'presensi_id' => $presensi->id
+        ])->with('success', 'Presensi berhasil disimpan!');
     }
+
     public function show($id)
     {
         $user = \Illuminate\Support\Facades\Auth::user();

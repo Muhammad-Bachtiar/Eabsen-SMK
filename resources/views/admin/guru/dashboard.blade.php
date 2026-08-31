@@ -1,142 +1,179 @@
 @extends('layouts.app')
 
-@section('header_title', 'Dashboard Guru')
+@section('header_title', 'Dashboard - Input Presensi')
 
 @section('content')
 <div class="page-content">
-    <!-- Welcome Banner -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card bg-primary text-white mb-4">
-                <div class="card-body p-4">
-                    <h4 class="text-white fw-bold">Selamat Datang, {{ $user->nama ?? $user->name }}!</h4>
-                    <p class="mb-0">Selamat beraktivitas. Silakan kelola presensi siswa pada kelas dan mata pelajaran yang Anda ampu hari ini.</p>
-                </div>
-            </div>
-        </div>
-    </div>
+    <div class="card shadow-sm border-0">
+        <div class="card-body pt-4">
+            
+            <h5 class="fw-bold mb-3">Input Presensi Mata Pelajaran</h5>
 
-    <!-- Ringkasan Statistik Card Mazer Style -->
-    <div class="row">
-        <div class="col-6 col-lg-4 col-md-6">
-            <div class="card">
-                <div class="card-body px-4 py-4-5">
-                    <div class="row">
-                        <div class="col-md-4 col-lg-12 col-xl-12 col-xxl-5 d-flex justify-content-start">
-                            <div class="stats-icon purple mb-2">
-                                <i class="bi bi-door-open-fill text-white"></i>
-                            </div>
-                        </div>
-                        <div class="col-md-8 col-lg-12 col-xl-12 col-xxl-7">
-                            <h6 class="text-muted font-semibold">Kelas Diampu</h6>
-                            <h6 class="font-extrabold mb-0">{{ $totalKelas }} Kelas</h6>
-                        </div>
+            <form action="{{ route('guru.presensi.store') }}" method="POST">
+                @csrf
+                <div class="row g-3 mb-3">
+                    <div class="col-md-3">
+                        <label class="form-label text-muted small mb-1">Tanggal</label>
+                        <input type="date" name="tanggal" class="form-control" value="{{ date('Y-m-d') }}" required>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label text-muted small mb-1">Pilih Kelas & Mata Pelajaran</label>
+                        <select class="form-select" id="pilihJadwal" required>
+                            <option value="">-- Pilih Jadwal Anda --</option>
+                            @foreach($jadwals as $j)
+                                <option value="{{ $j->kelas_id }}" data-mapel="{{ $j->mapel_id }}">
+                                    {{ $j->kelas->nama_kelas }} - {{ $j->mapel->nama_mapel }}
+                                </option>
+                            @endforeach
+                        </select>
+                        
+                        <input type="hidden" name="kelas_id" id="kelas_id">
+                        <input type="hidden" name="mapel_id" id="mapel_id">
                     </div>
                 </div>
-            </div>
-        </div>
-        <div class="col-6 col-lg-4 col-md-6">
-            <div class="card">
-                <div class="card-body px-4 py-4-5">
-                    <div class="row">
-                        <div class="col-md-4 col-lg-12 col-xl-12 col-xxl-5 d-flex justify-content-start">
-                            <div class="stats-icon blue mb-2">
-                                <i class="bi bi-book-half text-white"></i>
-                            </div>
-                        </div>
-                        <div class="col-md-8 col-lg-12 col-xl-12 col-xxl-7">
-                            <h6 class="text-muted font-semibold">Mata Pelajaran</h6>
-                            <h6 class="font-extrabold mb-0">{{ $totalMapel }} Mapel</h6>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-lg-4 col-md-6">
-            <div class="card">
-                <div class="card-body px-4 py-4-5">
-                    <div class="row">
-                        <div class="col-md-4 col-lg-12 col-xl-12 col-xxl-5 d-flex justify-content-start">
-                            <div class="stats-icon green mb-2">
-                                <i class="bi bi-clipboard-check-fill text-white"></i>
-                            </div>
-                        </div>
-                        <div class="col-md-8 col-lg-12 col-xl-12 col-xxl-7">
-                            <h6 class="text-muted font-semibold">Absen Hari Ini</h6>
-                            <h6 class="font-extrabold mb-0">{{ $presensiHariIni }} Sesi</h6>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <div class="row">
-        <!-- Daftar Kelas & Mapel Diampu -->
-        <div class="col-12 col-xl-5">
-            <div class="card">
-                <div class="card-header">
-                    <h4 class="card-title">Kelas & Mapel Diampu</h4>
-                </div>
-                <div class="card-body">
-                    <div class="list-group">
-                        @forelse($mapelDiampu as $item)
-                            <div class="list-group-item d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 class="mb-1 fw-bold">{{ $item->nama_kelas }}</h6>
-                                    <p class="mb-0 text-sm text-muted">{{ $item->nama_mapel }}</p>
-                                </div>
-                                <span class="badge bg-light-primary text-primary rounded-pill">Aktif</span>
-                            </div>
-                        @empty
-                            <div class="text-center p-3 text-muted">Belum ada penugasan kelas/mapel.</div>
-                        @endforelse
+                <div class="mb-4">
+                    <label class="form-label text-muted small d-block mb-2">Centang Jam Pelajaran (Boleh lebih dari satu)</label>
+                    <div class="d-flex flex-wrap gap-3">
+                        @for($i = 1; $i <= 10; $i++)
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="jam[]" value="{{ $i }}" id="jam{{ $i }}">
+                            <label class="form-check-label text-secondary" for="jam{{ $i }}">Jam {{ $i }}</label>
+                        </div>
+                        @endfor
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- Riwayat Input Presensi Terakhir (Poin 5 & 6) -->
-        <div class="col-12 col-xl-7">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h4 class="card-title">Riwayat Input Presensi Terakhir</h4>
-                    <a href="{{ route('guru.presensi.index') }}" class="btn btn-sm btn-outline-primary">Lihat Semua</a>
-                </div>
-                <div class="card-body">
+                <!-- Gambar 1: Form Radio Button Pilihan Guru -->
+                <div id="areaSiswa" style="display: none;" class="mb-4">
+                    <h6 class="fw-bold text-primary mb-3">Daftar Siswa</h6>
                     <div class="table-responsive">
-                        <table class="table table-hover table-lg">
-                            <thead>
+                        <table class="table table-bordered align-middle">
+                            <thead class="table-light">
                                 <tr>
-                                    <th>Tanggal</th>
-                                    <th>Kelas</th>
-                                    <th>Mata Pelajaran</th>
+                                    <th width="5%">No</th>
+                                    <th>Nama Siswa</th>
+                                    <th>Status Kehadiran</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                @forelse($riwayatPresensi as $presensi)
-                                <tr>
-                                    <td class="col-auto">
-                                        <p class="mb-0 fw-bold">{{ \Carbon\Carbon::parse($presensi->tanggal)->translatedFormat('d M Y') }}</p>
-                                    </td>
-                                    <td class="col-auto">
-                                        <span class="badge bg-light-info text-info">{{ $presensi->kelas->nama_kelas ?? '-' }}</span>
-                                    </td>
-                                    <td class="col-auto">
-                                        <p class="mb-0">{{ $presensi->mapel->nama_mapel ?? '-' }}</p>
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="3" class="text-center text-muted">Belum ada riwayat presensi yang diinput.</td>
-                                </tr>
-                                @endforelse
+                            <tbody id="tempatSiswa">
                             </tbody>
                         </table>
                     </div>
+
+                    <button type="submit" class="btn btn-primary px-4 mt-2">
+                        <i class="bi bi-save me-1"></i> Simpan Presensi
+                    </button>
                 </div>
+            </form>
+
+            <!-- Gambar 2: Hasil Simpan Presensi (Otomatis muncul setelah klik Simpan) -->
+            @if(isset($presensiSelesai) && $presensiSelesai)
+            <hr class="my-5">
+            <h5 class="fw-bold text-dark mb-3">Daftar Kehadiran Siswa</h5>
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th width="5%" class="text-center">No</th>
+                            <th width="20%">NIS</th>
+                            <th>Nama Siswa</th>
+                            <th width="15%" class="text-center">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($detailsSelesai as $index => $dt)
+                        <tr>
+                            <td class="text-center">{{ $index + 1 }}</td>
+                            <td>{{ $dt->siswa->nis ?? '-' }}</td>
+                            <td><strong>{{ $dt->siswa->nama ?? '-' }}</strong></td>
+                            <td class="text-center">
+                                @if(strtolower($dt->status) == 'hadir')
+                                    <span class="badge bg-success px-3 py-2">Hadir</span>
+                                @elseif(strtolower($dt->status) == 'sakit')
+                                    <span class="badge bg-warning text-dark px-3 py-2">Sakit</span>
+                                @elseif(strtolower($dt->status) == 'izin')
+                                    <span class="badge bg-primary px-3 py-2">Izin</span>
+                                @else
+                                    <span class="badge bg-danger px-3 py-2">Alpa</span>
+                                @endif
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
             </div>
+            @endif
+
         </div>
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    $(document).ready(function() {
+        function loadSiswa(kelasId) {
+            if(kelasId) {
+                $('#areaSiswa').show();
+                $('#tempatSiswa').html('<tr><td colspan="3" class="text-center py-3">Memuat data siswa...</td></tr>');
+
+                $.ajax({
+                    url: '/guru/presensi/get-siswa/' + kelasId,
+                    type: 'GET',
+                    success: function(response) {
+                        let baris = '';
+                        if(response.length > 0) {
+                            $.each(response, function(index, siswa) {
+                                baris += `
+                                    <tr>
+                                        <td>${index + 1}</td>
+                                        <td><strong>${siswa.nama}</strong><br><small class="text-muted">${siswa.nis ?? '-'}</small></td>
+                                        <td>
+                                            <div class="d-flex gap-4">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="status[${siswa.id}]" value="hadir" id="h_${siswa.id}" checked>
+                                                    <label class="form-check-label text-success fw-bold" for="h_${siswa.id}">Hadir</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="status[${siswa.id}]" value="sakit" id="s_${siswa.id}">
+                                                    <label class="form-check-label text-warning fw-bold" for="s_${siswa.id}">Sakit</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="status[${siswa.id}]" value="izin" id="i_${siswa.id}">
+                                                    <label class="form-check-label text-primary fw-bold" for="i_${siswa.id}">Izin</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="status[${siswa.id}]" value="alpa" id="a_${siswa.id}">
+                                                    <label class="form-check-label text-danger fw-bold" for="a_${siswa.id}">Alpa</label>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `;
+                            });
+                        } else {
+                            baris = '<tr><td colspan="3" class="text-center text-danger py-3">Belum ada siswa di kelas ini.</td></tr>';
+                        }
+                        $('#tempatSiswa').html(baris);
+                    },
+                    error: function() {
+                        $('#tempatSiswa').html('<tr><td colspan="3" class="text-center text-danger py-3">Gagal memuat siswa.</td></tr>');
+                    }
+                });
+            } else {
+                $('#areaSiswa').hide();
+                $('#tempatSiswa').html('');
+            }
+        }
+
+        $('#pilihJadwal').change(function() {
+            let kelasId = $(this).val();
+            let mapelId = $(this).find(':selected').data('mapel');
+            $('#kelas_id').val(kelasId);
+            $('#mapel_id').val(mapelId);
+            loadSiswa(kelasId);
+        });
+    });
+</script>
+@endpush

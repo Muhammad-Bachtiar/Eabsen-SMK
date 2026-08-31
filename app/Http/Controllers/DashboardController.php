@@ -88,36 +88,33 @@ class DashboardController extends Controller
     /**
      * Dashboard Guru.
      */
-    public function guru()
+    public function guru(Request $request)
     {
         $user = Auth::user();
+        $isAdmin = optional($user->role)->nama_role === 'admin' || $user->role_id == 1;
 
-    // 1. Ambil daftar kelas & mapel yang diampu dari relasi guru_mapel_kelas
-    // Asumsi model GuruMapelKelas atau query builder langsung ke tabel guru_mapel_kelas
-    $mapelDiampu = \DB::table('guru_mapel_kelas')
-        ->join('kelas', 'guru_mapel_kelas.kelas_id', '=', 'kelas.id')
-        ->join('mata_pelajarans', 'guru_mapel_kelas.mapel_id', '=', 'mata_pelajarans.id')
-        ->where('guru_mapel_kelas.guru_id', $user->id)
-        ->select('kelas.nama_kelas', 'mata_pelajarans.nama_mapel', 'guru_mapel_kelas.kelas_id')
-        ->get();
+        // Jika Admin, ambil semua penugasan. Jika Guru, ambil penugasan miliknya saja
+        if ($isAdmin) {
+            $jadwals = GuruMapelKelas::with(['kelas', 'mapel', 'guru'])->get();
+        } else {
+            $jadwals = GuruMapelKelas::with(['kelas', 'mapel'])
+                ->where('guru_id', $user->id)
+                ->get();
+        }
 
-    // 2. Ambil riwayat presensi yang diinput oleh guru ini
-    $riwayatPresensi = \App\Models\Presensi::with(['kelas', 'mapel'])
-        ->where('dicatat_oleh', $user->id)
-        ->orderBy('tanggal', 'desc')
-        ->limit(5)
-        ->get();
+        $presensiSelesai = null;
+        $detailsSelesai  = [];
 
-    // 3. Ringkasan angka statistik
-    $totalKelas = $mapelDiampu->pluck('kelas_id')->unique()->count();
-    $totalMapel = $mapelDiampu->pluck('nama_mapel')->unique()->count();
-    $presensiHariIni = \App\Models\Presensi::where('dicatat_oleh', $user->id)
-        ->whereDate('tanggal', now()->toDateString())
-        ->count();
+        if ($request->has('presensi_id')) {
+            $presensiSelesai = Presensi::with(['kelas', 'mapel'])->find($request->presensi_id);
+            if ($presensiSelesai) {
+                $detailsSelesai = PresensiDetail::with('siswa')
+                    ->where('presensi_id', $presensiSelesai->id)
+                    ->get();
+            }
+        }
 
-    return view('admin.guru.dashboard', compact(
-        'user', 'mapelDiampu', 'riwayatPresensi', 'totalKelas', 'totalMapel', 'presensiHariIni'
-    ));
+        return view('admin.guru.dashboard', compact('jadwals', 'user', 'presensiSelesai', 'detailsSelesai'));
     }
 
     /**
