@@ -16,19 +16,23 @@
                         <label class="form-label text-muted small mb-1">Tanggal</label>
                         <input type="date" name="tanggal" class="form-control" value="{{ date('Y-m-d') }}" required>
                     </div>
-                    <div class="col-md-5">
-                        <label class="form-label text-muted small mb-1">Pilih Kelas & Mata Pelajaran</label>
-                        <select class="form-select" id="pilihJadwal" required>
-                            <option value="">-- Pilih Jadwal Anda --</option>
-                            @foreach($jadwals as $j)
-                                <option value="{{ $j->kelas_id }}" data-mapel="{{ $j->mapel_id }}">
-                                    {{ $j->kelas->nama_kelas }} - {{ $j->mapel->nama_mapel }}
-                                </option>
+                    <div class="col-md-4">
+                        <label class="form-label text-muted small mb-1">Pilih Kelas</label>
+                        <select name="kelas_id" id="kelas_id" class="form-select" required>
+                            <option value="">-- Pilih Kelas --</option>
+                            @foreach($kelases as $k)
+                                <option value="{{ $k->id }}">{{ $k->nama_kelas }}</option>
                             @endforeach
                         </select>
-                        
-                        <input type="hidden" name="kelas_id" id="kelas_id">
-                        <input type="hidden" name="mapel_id" id="mapel_id">
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label text-muted small mb-1">Pilih Mata Pelajaran</label>
+                        <select name="mapel_id" id="mapel_id" class="form-select" required>
+                            <option value="">-- Pilih Mata Pelajaran --</option>
+                            @foreach($mapels as $m)
+                                <option value="{{ $m->id }}">{{ $m->nama_mapel }}</option>
+                            @endforeach
+                        </select>
                     </div>
                 </div>
 
@@ -44,7 +48,7 @@
                     </div>
                 </div>
 
-                <!-- Gambar 1: Form Radio Button Pilihan Guru -->
+                <!-- Form Radio Button Pilihan Guru -->
                 <div id="areaSiswa" style="display: none;" class="mb-4">
                     <h6 class="fw-bold text-primary mb-3">Daftar Siswa</h6>
                     <div class="table-responsive">
@@ -67,7 +71,7 @@
                 </div>
             </form>
 
-            <!-- Gambar 2: Hasil Simpan Presensi (Otomatis muncul setelah klik Simpan) -->
+            <!-- Hasil Simpan Presensi -->
             @if(isset($presensiSelesai) && $presensiSelesai)
             <hr class="my-5">
             <h5 class="fw-bold text-dark mb-3">Daftar Kehadiran Siswa</h5>
@@ -158,7 +162,7 @@
                         $('#tempatSiswa').html(baris);
                     },
                     error: function() {
-                        $('#tempatSiswa').html('<tr><td colspan="3" class="text-center text-danger py-3">Gagal memuat siswa.</td></tr>');
+                        $('#tempatSiswa').html('<tr><td colspan="3" class="text-center text-danger py-3">Gagal memuat data siswa.</td></tr>');
                     }
                 });
             } else {
@@ -167,11 +171,8 @@
             }
         }
 
-        $('#pilihJadwal').change(function() {
+        $('#kelas_id').change(function() {
             let kelasId = $(this).val();
-            let mapelId = $(this).find(':selected').data('mapel');
-            $('#kelas_id').val(kelasId);
-            $('#mapel_id').val(mapelId);
             loadSiswa(kelasId);
         });
     });

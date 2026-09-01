@@ -93,14 +93,9 @@ class DashboardController extends Controller
         $user = Auth::user();
         $isAdmin = optional($user->role)->nama_role === 'admin' || $user->role_id == 1;
 
-        // Jika Admin, ambil semua penugasan. Jika Guru, ambil penugasan miliknya saja
-        if ($isAdmin) {
-            $jadwals = GuruMapelKelas::with(['kelas', 'mapel', 'guru'])->get();
-        } else {
-            $jadwals = GuruMapelKelas::with(['kelas', 'mapel'])
-                ->where('guru_id', $user->id)
-                ->get();
-        }
+        // Ambil seluruh daftar kelas & mata pelajaran untuk dropdown
+        $kelases = Kelas::orderBy('nama_kelas', 'asc')->get();
+        $mapels  = MataPelajaran::orderBy('nama_mapel', 'asc')->get();
 
         $presensiSelesai = null;
         $detailsSelesai  = [];
@@ -114,7 +109,7 @@ class DashboardController extends Controller
             }
         }
 
-        return view('admin.guru.dashboard', compact('jadwals', 'user', 'presensiSelesai', 'detailsSelesai'));
+        return view('admin.guru.dashboard', compact('kelases', 'mapels', 'user', 'presensiSelesai', 'detailsSelesai'));
     }
 
     /**

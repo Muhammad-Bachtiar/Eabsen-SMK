@@ -67,7 +67,7 @@ class PresensiController extends Controller
         return response()->json($siswas);
     }
 
-    public function store(Request $request)
+public function store(Request $request)
     {
         $request->validate([
             'tanggal'  => 'required|date',
@@ -102,8 +102,8 @@ class PresensiController extends Controller
             ]);
         }
 
-        // Redirect kembali ke form input dengan flag sukses & ID presensi terbuat
-        return redirect()->route('guru.presensi.create', [
+        // Redirect kembali ke Dashboard Guru dengan membawa presensi_id agar tabel ringkasan muncul di bawah
+        return redirect()->route('guru.dashboard', [
             'presensi_id' => $presensi->id
         ])->with('success', 'Presensi berhasil disimpan!');
     }

@@ -54,7 +54,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('guru/import', [\App\Http\Controllers\Admin\GuruController::class, 'import'])->name('guru.import');
     Route::resource('guru', \App\Http\Controllers\Admin\GuruController::class);
 
-    Route::resource('penugasan', \App\Http\Controllers\Admin\GuruMapelKelasController::class);
+    // Route::resource('penugasan', \App\Http\Controllers\Admin\GuruMapelKelasController::class);
     Route::resource('jam-pelajaran', \App\Http\Controllers\Admin\JamPelajaranController::class);
     Route::resource('penugasan-bk', \App\Http\Controllers\Admin\BkKelasController::class);
 });

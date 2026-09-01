@@ -201,15 +201,6 @@
                             </a>
                         </li>
 
-                        <!-- Penugasan & Akademik -->
-                        <li class="sidebar-title">Penugasan & Akademik</li>
-
-                        <li class="sidebar-item {{ request()->routeIs('admin.penugasan.*') ? 'active' : '' }}">
-                            <a href="{{ route('admin.penugasan.index') }}" class='sidebar-link'>
-                                <i class="bi bi-mortarboard-fill"></i>
-                                <span>Penugasan Guru Mapel</span>
-                            </a>
-                        </li>
 
                         <li class="sidebar-item {{ request()->routeIs('admin.penugasan-bk.*') ? 'active' : '' }}">
                             <a href="{{ route('admin.penugasan-bk.index') }}" class='sidebar-link'>
