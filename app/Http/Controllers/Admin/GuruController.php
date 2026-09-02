@@ -2,58 +2,63 @@
 
 namespace App\Http\Controllers\Admin;
 
-use Spatie\SimpleExcel\SimpleExcelReader;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Spatie\SimpleExcel\SimpleExcelReader;
 
 class GuruController extends Controller
 {
     public function index()
     {
-        $roleIds = Role::whereIn('nama_role', ['guru', 'bk'])->pluck('id');
-        $gurus   = User::whereIn('role_id', $roleIds)->with('role')->get();
-        
+        // Menampilkan seluruh staf sekolah (Guru, BK, Waka, Kepsek)
+        $roleGuruIds = Role::whereIn('nama_role', ['guru', 'bk', 'waka_kesiswaan', 'kepala_sekolah'])->pluck('id');
+        $gurus = User::with('role')->whereIn('role_id', $roleGuruIds)->latest()->get();
+
         return view('admin.guru.index', compact('gurus'));
     }
 
     public function create()
     {
-        $roles = Role::whereIn('nama_role', ['guru', 'bk'])->get();
+        // Filter role khusus untuk staf (tanpa admin)
+        $roles = Role::whereIn('nama_role', ['guru', 'bk', 'waka_kesiswaan', 'kepala_sekolah'])
+            ->orderBy('id', 'asc')
+            ->get();
+
         return view('admin.guru.create', compact('roles'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'nip_nik'  => 'required|unique:users,nip_nik',
-            'nama'     => 'required',
+            'nama'     => 'required|string|max:255',
             'email'    => 'required|email|unique:users,email',
             'password' => 'required|min:6',
-            'role'     => 'nullable|in:guru,bk'
+            'role_id'  => 'required|exists:roles,id',
+            'nip_nik'  => 'nullable|string|max:50',
         ]);
-
-        $targetRole = $request->input('role', 'guru');
-        $role       = Role::where('nama_role', $targetRole)->first();
 
         User::create([
-            'role_id'      => $role->id,
-            'nip_nik'      => $request->nip_nik,
-            'nama'         => $request->nama,
-            'email'        => $request->email,
-            'password'     => Hash::make($request->password),
-            'status_aktif' => 1
+            'nama'     => $request->nama,
+            'email'    => $request->email,
+            'password' => Hash::make($request->password),
+            'role_id'  => $request->role_id,
+            'nip_nik'  => $request->nip_nik,
         ]);
 
-        return redirect()->route('admin.guru.index')->with('success', 'Data Akun Staf Pengajar berhasil ditambahkan.');
+        return redirect()->route('admin.guru.index')->with('success', 'Akun pengajar/staf berhasil ditambahkan!');
     }
 
     public function edit($id)
     {
-        $guru  = User::findOrFail($id);
-        $roles = Role::whereIn('nama_role', ['guru', 'bk'])->get();
+        $guru = User::findOrFail($id);
+        
+        $roles = Role::whereIn('nama_role', ['guru', 'bk', 'waka_kesiswaan', 'kepala_sekolah'])
+            ->orderBy('id', 'asc')
+            ->get();
+
         return view('admin.guru.edit', compact('guru', 'roles'));
     }
 
@@ -62,46 +67,41 @@ class GuruController extends Controller
         $guru = User::findOrFail($id);
 
         $request->validate([
-            'nip_nik'  => 'required|unique:users,nip_nik,' . $guru->id,
-            'nama'     => 'required',
-            'email'    => 'required|email|unique:users,email,' . $guru->id,
-            'password' => 'nullable|min:6',
-            'role'     => 'nullable|in:guru,bk'
+            'nama'     => 'required|string|max:255',
+            'email'    => 'required|email|unique:users,email,' . $id,
+            'role_id'  => 'required|exists:roles,id',
+            'nip_nik'  => 'nullable|string|max:50',
         ]);
 
         $data = [
-            'nip_nik' => $request->nip_nik,
             'nama'    => $request->nama,
             'email'   => $request->email,
+            'role_id' => $request->role_id,
+            'nip_nik' => $request->nip_nik,
         ];
 
-        if ($request->filled('role')) {
-            $role = Role::where('nama_role', $request->role)->first();
-            if ($role) {
-                $data['role_id'] = $role->id;
-            }
-        }
-
         if ($request->filled('password')) {
+            $request->validate(['password' => 'min:6']);
             $data['password'] = Hash::make($request->password);
         }
 
         $guru->update($data);
 
-        return redirect()->route('admin.guru.index')->with('success', 'Data Akun Staf Pengajar berhasil diperbarui.');
+        return redirect()->route('admin.guru.index')->with('success', 'Data pengajar/staf berhasil diperbarui!');
     }
 
-    public function downloadTemplate()
+    public function destroy($id)
     {
-        $filePath = public_path('template/Template_Import_Guru.xlsx');
-        
-        if (file_exists($filePath)) {
-            return response()->download($filePath);
-        } else {
-            return back()->with('error', 'File template belum tersedia di server.');
-        }
+        User::findOrFail($id)->delete();
+        return redirect()->route('admin.guru.index')->with('success', 'Akun pengajar/staf berhasil dihapus!');
     }
 
+    /**
+     * Import Data Guru/Staf dari File Excel
+     */
+/**
+     * Import Data Guru/Staf via Excel dengan Notifikasi Duplikasi Lengkap
+     */
     public function import(Request $request)
     {
         $request->validate([
@@ -110,43 +110,107 @@ class GuruController extends Controller
 
         try {
             $file = $request->file('file');
-            $rows = SimpleExcelReader::create($file->getRealPath(), $file->getClientOriginalExtension())->getRows();
+            $filePath = $file->getPathname();
+            $extension = $file->getClientOriginalExtension();
 
-            $roleGuru = Role::where('nama_role', 'LIKE', '%guru%')->where('nama_role', 'NOT LIKE', '%bk%')->first();
-            $roleBk   = Role::where('nama_role', 'LIKE', '%bk%')->first();
+            $rows = SimpleExcelReader::create($filePath, $extension)->getRows();
 
-            $rows->each(function(array $row) use ($roleGuru, $roleBk) {
-                if (!empty($row['email'])) {
-                    $inputRole = strtolower(trim($row['role'] ?? 'guru'));
-                    
-                    $assignedRoleId = (in_array($inputRole, ['bk', 'guru bk'])) 
-                        ? ($roleBk->id ?? $roleGuru->id) 
-                        : ($roleGuru->id ?? null);
+            $defaultRole = Role::where('nama_role', 'guru')->first();
+            $defaultRoleId = $defaultRole ? $defaultRole->id : 2;
 
-                    if ($assignedRoleId) {
-                        User::updateOrCreate(
-                            ['email' => $row['email']],
-                            [
-                                'nip_nik'  => $row['nip_nik'] ?? null,
-                                'nama'     => $row['nama'],
-                                'password' => Hash::make($row['password'] ?? '12345678'),
-                                'role_id'  => $assignedRoleId
-                            ]
-                        );
-                    }
+            $rolesMap = Role::all()->pluck('id', 'nama_role')->mapWithKeys(function ($id, $name) {
+                return [strtolower(trim($name)) => $id];
+            })->toArray();
+
+            $insertedCount = 0;
+            $warnings = [];
+
+            foreach ($rows as $index => $row) {
+                $barisExcel = $index + 2; // Menyesuaikan baris Excel (baris 1 = header)
+
+                $nama    = trim($row['nama'] ?? '');
+                $email   = trim($row['email'] ?? '');
+                $nipNik  = trim($row['nip_nik'] ?? '');
+                $roleRaw = strtolower(trim($row['role'] ?? 'guru'));
+
+                // Skip jika kolom utama kosong
+                if (empty($nama) || empty($email)) {
+                    continue;
                 }
-            });
 
-            return redirect()->route('admin.guru.index')->with('success', 'Data Guru & BK berhasil diimport!');
+                // 1. Cek Duplikasi Email di Database
+                if (User::where('email', $email)->exists()) {
+                    $warnings[] = "Baris {$barisExcel}: Email '{$email}' sudah pernah diinputkan.";
+                    continue;
+                }
 
+                // 2. Cek Duplikasi NIP/NIK di Database (jika NIP/NIK diisi)
+                if (!empty($nipNik) && User::where('nip_nik', $nipNik)->exists()) {
+                    $warnings[] = "Baris {$barisExcel}: NIP/NIK '{$nipNik}' ({$nama}) sudah pernah diinputkan.";
+                    continue;
+                }
+
+                // 3. Cek Duplikasi Nama di Database
+                if (User::where('nama', $nama)->exists()) {
+                    $warnings[] = "Baris {$barisExcel}: Nama '{$nama}' sudah pernah diinputkan.";
+                    continue;
+                }
+
+                // Normalisasi Role
+                if (in_array($roleRaw, ['waka', 'waka kesiswaan', 'waka_kesiswaan'])) {
+                    $roleRaw = 'waka_kesiswaan';
+                } elseif (in_array($roleRaw, ['kepsek', 'kepala sekolah', 'kepala_sekolah'])) {
+                    $roleRaw = 'kepala_sekolah';
+                } elseif (in_array($roleRaw, ['bk', 'guru bk'])) {
+                    $roleRaw = 'bk';
+                }
+
+                $roleId = $rolesMap[$roleRaw] ?? $defaultRoleId;
+
+                // Simpan User Baru
+                User::create([
+                    'nip_nik'  => $nipNik ?: null,
+                    'nama'     => $nama,
+                    'email'    => $email,
+                    'password' => Hash::make($row['password'] ?? '123456'),
+                    'role_id'  => $roleId,
+                ]);
+
+                $insertedCount++;
+            }
+
+            // Menyusun Pesan Response
+            // Menyusun Pesan Response
+            $pesanBerhasil = "Berhasil mengimport {$insertedCount} data pengajar/staf.";
+
+            if (!empty($warnings)) {
+                if ($insertedCount > 0) {
+                    return redirect()->route('admin.guru.index')
+                        ->with('success', $pesanBerhasil)
+                        ->with('warning_list', $warnings);
+                }
+                
+                return redirect()->route('admin.guru.index')
+                    ->with('warning_list', $warnings);
+            }
+
+            return redirect()->route('admin.guru.index')->with('success', $pesanBerhasil);
         } catch (\Exception $e) {
-            return back()->with('error', 'Gagal membaca file: ' . $e->getMessage());
+            return back()->with('error', 'Gagal mengimport data: ' . $e->getMessage());
         }
     }
 
-    public function destroy(User $guru)
+    /**
+     * Download Template File Excel Guru
+     */
+    public function downloadTemplate()
     {
-        $guru->delete();
-        return redirect()->route('admin.guru.index')->with('success', 'Data Akun Guru berhasil dihapus.');
+        $filePath = public_path('templates/template_guru.xlsx');
+
+        if (file_exists($filePath)) {
+            return response()->download($filePath);
+        }
+
+        return back()->with('error', 'File template_guru.xlsx belum tersedia di folder public/templates.');
     }
 }

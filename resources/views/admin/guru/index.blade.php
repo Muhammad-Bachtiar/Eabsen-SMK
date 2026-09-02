@@ -4,11 +4,24 @@
 @section('header_title', 'Master Data Guru')
 
 @section('content')
+            @if(session('warning_list'))
+                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                    <h6 class="alert-heading font-bold mb-2">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i> Beberapa data tidak dapat diimport:
+                    </h6>
+                    <ul class="mb-0 ps-3">
+                        @foreach(session('warning_list') as $warn)
+                            <li>{{ $warn }}</li>
+                        @endforeach
+                    </ul>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
 <section class="section">
     <div class="card shadow-sm">
         <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
             <h5 class="card-title mb-0">Daftar Akun Guru</h5>
-            
+
             <div class="d-flex gap-2">
                 <!-- Tombol Download Template -->
                 <a href="{{ route('admin.guru.download-template') }}" class="btn btn-success btn-sm">

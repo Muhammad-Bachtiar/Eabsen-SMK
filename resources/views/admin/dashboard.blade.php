@@ -172,25 +172,9 @@
             </div>
         </div>
 
-        <!-- 2. Row Kartu Statistik Mazer Baris 2 -->
+        <!-- 2. Row Kartu Statistik Baris 2 -->
         <div class="row">
-            <div class="col-6 col-lg-3 col-md-6">
-                <div class="card shadow-sm bg-light-primary border border-primary border-opacity-25">
-                    <div class="card-body py-3 px-3">
-                        <div class="d-flex align-items-center">
-                            <div class="avatar avatar-md bg-primary text-white me-3">
-                                <i class="bi bi-mortarboard-fill fs-5"></i>
-                            </div>
-                            <div>
-                                <h6 class="text-muted font-semibold mb-0" style="font-size: 0.8rem;">Tugas Mengajar</h6>
-                                <h5 class="font-extrabold mb-0 text-primary">{{ $totalPenugasan }}</h5>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-6 col-lg-3 col-md-6">
+            <div class="col-6 col-lg-4 col-md-6">
                 <div class="card shadow-sm bg-light-info border border-info border-opacity-25">
                     <div class="card-body py-3 px-3">
                         <div class="d-flex align-items-center">
@@ -206,7 +190,7 @@
                 </div>
             </div>
 
-            <div class="col-6 col-lg-3 col-md-6">
+            <div class="col-6 col-lg-4 col-md-6">
                 <div class="card shadow-sm bg-light-success border border-success border-opacity-25">
                     <div class="card-body py-3 px-3">
                         <div class="d-flex align-items-center">
@@ -222,7 +206,7 @@
                 </div>
             </div>
 
-            <div class="col-6 col-lg-3 col-md-6">
+            <div class="col-6 col-lg-4 col-md-6">
                 <div class="card shadow-sm bg-light-warning border border-warning border-opacity-25">
                     <div class="card-body py-3 px-3">
                         <div class="d-flex align-items-center">
@@ -239,7 +223,7 @@
             </div>
         </div>
 
-        <!-- 3. Grafik Aktivitas & Presensi ApexCharts -->
+        <!-- 3. Grafik Aktivitas Presensi ApexCharts -->
         <div class="row">
             <div class="col-12">
                 <div class="card shadow-sm">
@@ -248,7 +232,7 @@
                             <h4 class="card-title mb-0">Statistik Rekapitulasi Presensi</h4>
                             <p class="text-muted text-sm mb-0">Grafik frekuensi kehadiran dan aktivitas kelas harian</p>
                         </div>
-                        <span class="badge bg-primary">Tahun Ajaran 2025/2026</span>
+                        <span class="badge bg-primary">Sistem Digital SMK</span>
                     </div>
                     <div class="card-body">
                         <div id="chart-profile-visit"></div>
@@ -257,9 +241,9 @@
             </div>
         </div>
 
-        <!-- 4. Tabel Siswa Terbaru & Penugasan Terbaru -->
+        <!-- 4. Tabel Siswa Terbaru -->
         <div class="row">
-            <div class="col-12 col-xl-6">
+            <div class="col-12">
                 <div class="card shadow-sm">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="card-title mb-0">Siswa Terbaru</h5>
@@ -272,7 +256,7 @@
                                     <tr>
                                         <th>Nama Siswa</th>
                                         <th>Kelas</th>
-                                        <th>JK</th>
+                                        <th>Jenis Kelamin</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -284,7 +268,7 @@
                                                     <span class="avatar-content fw-bold">{{ strtoupper(substr($siswa->nama, 0, 2)) }}</span>
                                                 </div>
                                                 <div>
-                                                    <p class="font-bold mb-0 text-truncate" style="max-width: 150px;">{{ $siswa->nama }}</p>
+                                                    <p class="font-bold mb-0 text-truncate" style="max-width: 250px;">{{ $siswa->nama }}</p>
                                                     <small class="text-muted">NIS: {{ $siswa->nis }}</small>
                                                 </div>
                                             </div>
@@ -311,54 +295,12 @@
                     </div>
                 </div>
             </div>
-
-            <div class="col-12 col-xl-6">
-                <div class="card shadow-sm">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="card-title mb-0">Penugasan Mengajar Terbaru</h5>
-                        <a href="{{ route('admin.penugasan.index') }}" class="btn btn-sm btn-outline-primary rounded-pill">Lihat Semua</a>
-                    </div>
-                    <div class="card-body px-0 pt-0">
-                        <div class="table-responsive">
-                            <table class="table table-hover table-lg mb-0">
-                                <thead>
-                                    <tr>
-                                        <th>Guru</th>
-                                        <th>Mapel</th>
-                                        <th>Kelas</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($penugasansTerbaru as $penugasan)
-                                    <tr>
-                                        <td class="col-5">
-                                            <p class="font-bold mb-0 text-truncate" style="max-width: 130px;">{{ $penugasan->guru->nama ?? 'Guru Dihapus' }}</p>
-                                            <small class="text-muted">{{ $penugasan->guru->nip_nik ?? '-' }}</small>
-                                        </td>
-                                        <td class="col-4">
-                                            <span class="badge bg-light-success text-success">{{ $penugasan->mapel->nama_mapel ?? '-' }}</span>
-                                        </td>
-                                        <td class="col-3">
-                                            <span class="badge bg-light-secondary text-secondary">{{ $penugasan->kelas->nama_kelas ?? '-' }}</span>
-                                        </td>
-                                    </tr>
-                                    @empty
-                                    <tr>
-                                        <td colspan="3" class="text-center text-muted py-3">Belum ada data penugasan.</td>
-                                    </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 
     <!-- Kolom Kanan: Profil, Donut Chart Gender, Jam Pelajaran & Quick Menu -->
     <div class="col-12 col-lg-3">
-        <!-- Profil Card Mazer -->
+        <!-- Profil Card -->
         <div class="card shadow-sm profile-card">
             <div class="card-body py-4 px-4">
                 <div class="d-flex align-items-center">
@@ -432,9 +374,6 @@
                     </a>
                     <a href="{{ route('admin.guru.create') }}" class="btn btn-outline-info btn-sm text-start">
                         <i class="bi bi-person-plus-fill me-2"></i> Tambah Akun Guru
-                    </a>
-                    <a href="{{ route('admin.penugasan.create') }}" class="btn btn-outline-success btn-sm text-start">
-                        <i class="bi bi-mortarboard-fill me-2"></i> Buat Penugasan
                     </a>
                     <a href="{{ route('koordinator-bk.jenis-pelanggaran.create') }}" class="btn btn-outline-warning btn-sm text-start">
                         <i class="bi bi-exclamation-triangle-fill me-2"></i> Input Jenis Pelanggaran
