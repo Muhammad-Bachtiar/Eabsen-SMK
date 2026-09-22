@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Guru;
 
 use App\Http\Controllers\Controller;
@@ -6,7 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Presensi;
 use App\Models\PresensiDetail;
 use App\Models\PresensiJam;
-use App\Models\GuruMapelKelas; // Sesuaikan jika nama model penugasan Anda beda
+use App\Models\GuruMapelKelas;
 use App\Models\Siswa;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -19,9 +20,8 @@ class PresensiController extends Controller
         $userData = Auth::user();
         $isAdmin = optional($userData->role)->nama_role === 'admin';
 
-        $query = \App\Models\Presensi::with(['kelas', 'mapel', 'pencatat']);
+        $query = Presensi::with(['kelas', 'mapel', 'pencatat']);
         
-        // Jika bukan admin, filter hanya buatan guru yang login
         if (!$isAdmin) {
             $query->where('dicatat_oleh', $user);
         }
@@ -36,48 +36,125 @@ class PresensiController extends Controller
     public function create(Request $request)
     {
         $user = Auth::user();
-        $jadwals = GuruMapelKelas::with(['kelas', 'mapel'])
-            ->where('guru_id', $user->id)
-            ->get();
+        // Data untuk form
+    $kelases       = \App\Models\Kelas::orderBy('nama_kelas')->get();
+    $mapels        = \App\Models\MataPelajaran::orderBy('nama_mapel')->get();
+    $jamPelajarans = \App\Models\JamPelajaran::orderBy('jam_ke')->get();
 
-        $presensiSelesai = null;
-        $detailsSelesai  = [];
+    // Default filter (opsional, kalau ada request)
+    $tanggal  = $request->input('tanggal', date('Y-m-d'));
+    $kelas_id = $request->input('kelas_id');
+    $mapel_id = $request->input('mapel_id');
 
-        // Jika baru saja melakukan simpan presensi
-        if ($request->has('presensi_id')) {
-            $presensiSelesai = Presensi::with(['kelas', 'mapel'])->find($request->presensi_id);
-            if ($presensiSelesai) {
-                $detailsSelesai = PresensiDetail::with('siswa')
-                    ->where('presensi_id', $presensiSelesai->id)
-                    ->get();
+    return view('admin.guru.dashboard', compact(
+        'user', 'kelases', 'mapels', 'jamPelajarans',
+        'tanggal', 'kelas_id', 'mapel_id'
+    ));
+}
+
+public function getData(Request $request)
+{
+    try {
+        $kelasId = $request->kelas_id;
+        $tanggal = $request->tanggal;
+
+        if (!$kelasId || !$tanggal) {
+            return response()->json([
+                'siswas'  => [],
+                'riwayat' => (object)[]
+            ]);
+        }
+
+        // 1. Data siswa
+        $siswas = Siswa::where('kelas_id', $kelasId)
+            ->orderBy('nama', 'asc')
+            ->get(['id', 'nama', 'nis']);
+
+        // 2. Riwayat presensi (SEMUA mapel di kelas & tanggal ini,
+        //    karena beberapa guru bisa mengisi di jam berbeda)
+        $presensis = Presensi::with([
+            'pencatat',
+            'mapel',
+            'presensiDetails.siswa',
+            'presensiJams.jamPelajaran'
+        ])
+        ->where('kelas_id', $kelasId)
+        ->where('tanggal', $tanggal)
+        ->get();
+
+        $riwayatFormatted = [];
+
+        foreach ($presensis as $presensi) {
+            foreach ($presensi->presensiJams as $pJam) {
+                // jam_ke = id, jadi aman pakai jamPelajaran->jam_ke
+                $jamKe = $pJam->jamPelajaran
+                    ? $pJam->jamPelajaran->jam_ke
+                    : $pJam->jam_pelajaran_id;
+
+                $riwayatFormatted[$jamKe] = [
+                    'presensi_id'   => $presensi->id,
+                    'pencatat_nama' => $presensi->pencatat
+                        ? ($presensi->pencatat->nama ?? $presensi->pencatat->name)
+                        : 'Guru',
+                    'mapel_nama'    => $presensi->mapel
+                        ? $presensi->mapel->nama_mapel
+                        : 'Mapel',
+                    'details'       => $presensi->presensiDetails->map(function ($d) {
+                        return [
+                            'siswa_id'   => $d->siswa_id,
+                            'nama'       => $d->siswa ? $d->siswa->nama : 'Siswa',
+                            'status'     => $d->status,
+                            'keterangan' => $d->keterangan
+                        ];
+                    })
+                ];
             }
         }
 
-        return view('admin.guru.presensi.create', compact('jadwals', 'user', 'presensiSelesai', 'detailsSelesai'));
-    }
-
-    // Fungsi AJAX untuk memunculkan daftar siswa tanpa reload halaman
-    public function getSiswa($kelas_id)
-    {
-        $siswas = Siswa::where('kelas_id', $kelas_id)
-            ->where('status', 'aktif')
-            ->orderBy('nama', 'asc')
-            ->get();
-            
-        return response()->json($siswas);
-    }
-
-public function store(Request $request)
-    {
-        $request->validate([
-            'tanggal'  => 'required|date',
-            'kelas_id' => 'required',
-            'mapel_id' => 'required',
-            'jam'      => 'required|array|min:1',
-            'status'   => 'required|array',
+        return response()->json([
+            'siswas'  => $siswas,
+            'riwayat' => (object)$riwayatFormatted
         ]);
 
-        // 1. Simpan Header Presensi
+    } catch (\Exception $e) {
+        return response()->json([
+            'error'   => true,
+            'message' => $e->getMessage(),
+            'line'    => $e->getLine()
+        ], 500);
+    }
+}
+
+public function store(Request $request)
+{
+    $request->validate([
+        'tanggal'  => 'required|date',
+        'kelas_id' => 'required',
+        'mapel_id' => 'required',
+        'jam'      => 'required|array|min:1',
+        'status'   => 'required|array',
+    ]);
+
+    DB::beginTransaction();
+    try {
+        // Cegah duplikasi: cek apakah jam yang dipilih sudah terisi
+        $existing = DB::table('presensi_jams')
+            ->join('presensis', 'presensi_jams.presensi_id', '=', 'presensis.id')
+            ->where('presensis.kelas_id', $request->kelas_id)
+            ->where('presensis.tanggal', $request->tanggal)
+            ->whereIn('presensi_jams.jam_pelajaran_id', $request->jam)
+            ->pluck('presensi_jams.jam_pelajaran_id')
+            ->toArray();
+
+        if (!empty($existing)) {
+            DB::rollBack();
+            $msg = 'Jam berikut sudah terisi oleh guru lain: Jam ' . implode(', ', $existing);
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+            return back()->with('error', $msg);
+        }
+
         $presensi = Presensi::create([
             'tanggal'      => $request->tanggal,
             'kelas_id'     => $request->kelas_id,
@@ -85,51 +162,67 @@ public function store(Request $request)
             'dicatat_oleh' => Auth::id(),
         ]);
 
-        // 2. Simpan Jam Pelajaran
-        foreach ($request->jam as $j) {
-            \DB::table('presensi_jams')->insert([
+        foreach ($request->jam as $jamKe) {
+            DB::table('presensi_jams')->insert([
                 'presensi_id'      => $presensi->id,
-                'jam_pelajaran_id' => $j,
+                'jam_pelajaran_id' => $jamKe,
             ]);
         }
 
-        // 3. Simpan Detail Kehadiran Siswa
         foreach ($request->status as $siswaId => $st) {
             PresensiDetail::create([
                 'presensi_id' => $presensi->id,
                 'siswa_id'    => $siswaId,
                 'status'      => $st,
+                'keterangan'  => $request->keterangan[$siswaId] ?? null,
             ]);
         }
 
-        // Redirect kembali ke Dashboard Guru dengan membawa presensi_id agar tabel ringkasan muncul di bawah
-        return redirect()->route('guru.dashboard', [
-            'presensi_id' => $presensi->id
-        ])->with('success', 'Presensi berhasil disimpan!');
-    }
+        DB::commit();
 
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success'     => true,
+                'message'     => 'Presensi berhasil disimpan!',
+                'presensi_id' => $presensi->id,
+                'jam_diisi'   => $request->jam,
+            ]);
+        }
+
+        return redirect()
+            ->route('guru.dashboard', [
+                'presensi_id' => $presensi->id,
+                'kelas_id'    => $request->kelas_id,
+                'tanggal'     => $request->tanggal,
+                'mapel_id'    => $request->mapel_id,
+            ])->with('success', 'Presensi berhasil disimpan!');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            }
+            return back()->with('error', 'Gagal menyimpan presensi: ' . $e->getMessage());
+        }
+}
     public function show($id)
     {
-        $user = \Illuminate\Support\Facades\Auth::user();
+        $user = Auth::user();
         $isAdmin = optional($user->role)->nama_role === 'admin' || $user->role_id == 1;
 
-        $query = \App\Models\Presensi::with(['kelas', 'mapel', 'pencatat']);
+        $query = Presensi::with(['kelas', 'mapel', 'pencatat']);
 
-        // Jika BUKAN admin, kunci akses hanya untuk guru pencatatnya sendiri
         if (!$isAdmin) {
             $query->where('dicatat_oleh', $user->id);
         }
 
-        // Ambil data presensi (akan 404 HANYA jika ID memang tidak ada di DB, atau guru mencoba buka milik guru lain)
         $presensi = $query->findOrFail($id);
 
-        // Tarik jam pelajaran yang dicentang
-        $jams = \App\Models\PresensiJam::where('presensi_id', $id)
+        $jams = PresensiJam::where('presensi_id', $id)
                         ->pluck('jam_pelajaran_id')
                         ->toArray();
 
-        // Tarik detail siswa beserta statusnya
-        $details = \App\Models\PresensiDetail::with('siswa')
+        $details = PresensiDetail::with('siswa')
                         ->where('presensi_id', $id)
                         ->get();
 

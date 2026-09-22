@@ -13,7 +13,7 @@ class PresensiDetail extends Model
         'status',
         'keterangan',
     ];
-
+    public $timestamps = true;
     public function presensi(): BelongsTo
     {
         return $this->belongsTo(Presensi::class);

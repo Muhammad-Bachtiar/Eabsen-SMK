@@ -11,6 +11,8 @@ class PresensiJam extends Model
         'presensi_id',
         'jam_pelajaran_id',
     ];
+    
+    public $timestamps = true;
 
     public function presensi(): BelongsTo
     {

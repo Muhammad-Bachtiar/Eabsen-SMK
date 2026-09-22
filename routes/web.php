@@ -71,7 +71,7 @@ Route::middleware(['auth', 'role:admin,guru'])->prefix('guru')->name('guru.')->g
     Route::get('presensi', [\App\Http\Controllers\Guru\PresensiController::class, 'index'])->name('presensi.index');
     Route::get('presensi/create', [\App\Http\Controllers\Guru\PresensiController::class, 'create'])->name('presensi.create');
     Route::post('presensi/store', [\App\Http\Controllers\Guru\PresensiController::class, 'store'])->name('presensi.store');
-    Route::get('presensi/get-siswa/{kelas_id}', [\App\Http\Controllers\Guru\PresensiController::class, 'getSiswa'])->name('presensi.get-siswa');
+    Route::get('presensi/get-data-presensi', [\App\Http\Controllers\Guru\PresensiController::class, 'getData'])->name('presensi.getData');
     Route::get('presensi/{id}', [\App\Http\Controllers\Guru\PresensiController::class, 'show'])->name('presensi.show');
 });
 

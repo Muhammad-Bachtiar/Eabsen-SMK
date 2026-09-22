@@ -13,6 +13,7 @@ use App\Models\BkKelas;
 use App\Models\JamPelajaran;
 use App\Models\JenisPelanggaran;
 use App\Models\Presensi;
+use App\Models\PresensiJam;
 use App\Models\PresensiDetail;
 use App\Models\PelanggaranSiswa;
 use Carbon\Carbon;
@@ -88,28 +89,69 @@ class DashboardController extends Controller
     /**
      * Dashboard Guru.
      */
-    public function guru(Request $request)
+ public function guru(Request $request)
     {
         $user = Auth::user();
-        $isAdmin = optional($user->role)->nama_role === 'admin' || $user->role_id == 1;
 
-        // Ambil seluruh daftar kelas & mata pelajaran untuk dropdown
-        $kelases = Kelas::orderBy('nama_kelas', 'asc')->get();
-        $mapels  = MataPelajaran::orderBy('nama_mapel', 'asc')->get();
+        // ============================================================
+        // 1. Data untuk form presensi (dipakai dashboard.blade.php)
+        // ============================================================
+        $kelases       = Kelas::orderBy('nama_kelas', 'asc')->get();
+        $mapels        = MataPelajaran::orderBy('nama_mapel', 'asc')->get();
+        $jamPelajarans = JamPelajaran::orderBy('jam_ke', 'asc')->get();
 
-        $presensiSelesai = null;
-        $detailsSelesai  = [];
+        // Default filter dari query string (kalau ada)
+        $tanggal  = $request->input('tanggal', date('Y-m-d'));
+        $kelas_id = $request->input('kelas_id');
+        $mapel_id = $request->input('mapel_id');
 
-        if ($request->has('presensi_id')) {
-            $presensiSelesai = Presensi::with(['kelas', 'mapel'])->find($request->presensi_id);
-            if ($presensiSelesai) {
-                $detailsSelesai = PresensiDetail::with('siswa')
-                    ->where('presensi_id', $presensiSelesai->id)
-                    ->get();
-            }
+        // ============================================================
+        // 2. Data presensi hari ini (opsional, untuk ringkasan dashboard)
+        // ============================================================
+        $presensiHariIni = Presensi::with(['kelas', 'mapel', 'pencatat'])
+            ->where('dicatat_oleh', $user->id)
+            ->whereDate('tanggal', date('Y-m-d'))
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // ============================================================
+        // 3. Data siswa (kalau dashboard butuh daftar siswa)
+        //    Sesuaikan dengan kebutuhan view Anda
+        // ============================================================
+        $siswas = Siswa::orderBy('nama', 'asc')->limit(0)->get();
+        // ↑ limit(0) supaya kosong kalau memang tidak dipakai.
+        //   Kalau butuh semua, hapus ->limit(0).
+
+        // ============================================================
+        // 4. Proses presensi_id dari redirect setelah submit
+        //    → supaya accordion auto-open di jam yang baru diisi
+        // ============================================================
+        $presensiId = $request->input('presensi_id');
+        $jamYangBaruDiisi = [];
+
+        if ($presensiId) {
+            $jamYangBaruDiisi = PresensiJam::where('presensi_id', $presensiId)
+                ->pluck('jam_pelajaran_id')
+                ->toArray();
         }
 
-        return view('admin.guru.dashboard', compact('kelases', 'mapels', 'user', 'presensiSelesai', 'detailsSelesai'));
+        // ============================================================
+        // 5. Kirim ke view — PASTIKAN semua variabel yang di-compact
+        //    sudah didefinisikan di atas.
+        // ============================================================
+        return view('admin.guru.dashboard', compact(
+            'user',
+            'kelases',
+            'mapels',
+            'jamPelajarans',
+            'tanggal',
+            'kelas_id',
+            'mapel_id',
+            'presensiHariIni',
+            'siswas',
+            'presensiId',
+            'jamYangBaruDiisi'
+        ));
     }
 
     /**

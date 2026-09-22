@@ -78,40 +78,92 @@ class SiswaController extends Controller
             try {
                 $file = $request->file('file');
 
-                // Membaca file Excel/CSV menggunakan SimpleExcelReader
-                $rows = SimpleExcelReader::create($file->getRealPath(), $file->getClientOriginalExtension())->getRows();
+                $reader = SimpleExcelReader::create($file->getRealPath(), $file->getClientOriginalExtension());
+                $rows = $reader->getRows();
 
-                $rows->each(function(array $row) {
-                    // Ambil NIS/NISN, Nama, Kelas, dan Jenis Kelamin dari baris Excel
-                    $nis       = $row['nis'] ?? $row['nisn'] ?? null;
-                    $nama      = $row['nama'] ?? $row['nama_siswa'] ?? null;
-                    $namaKelas = $row['kelas'] ?? $row['nama_kelas'] ?? null;
-                    $jk        = $row['jenis_kelamin'] ?? $row['jk'] ?? 'L';
+                // Ambil semua data kelas dari database dan format nama kelasnya sebagai pembanding
+                $kelases = Kelas::all()->map(function($k) {
+                    return [
+                        'id' => $k->id,
+                        'formatted' => $this->formatNamaKelas($k->nama_kelas)
+                    ];
+                });
 
-                    if (!empty($nama) && !empty($namaKelas) && !empty($nis)) {
-                        // Cari ID Kelas berdasarkan nama kelas di Excel
-                        $kelas = Kelas::where('nama_kelas', 'LIKE', '%' . trim($namaKelas) . '%')->first();
+                $importedCount = 0;
+                $failedClassCount = 0;
 
-                        if ($kelas) {
+                foreach ($rows as $row) {
+                    // Normalize key header Excel menjadi lowercase
+                    $cleanRow = [];
+                    foreach ($row as $key => $value) {
+                        $cleanRow[strtolower(trim($key))] = is_string($value) ? trim($value) : $value;
+                    }
+
+                    $nis       = $cleanRow['nis'] ?? $cleanRow['nisn'] ?? null;
+                    $nama      = $cleanRow['nama'] ?? $cleanRow['nama_siswa'] ?? $cleanRow['nama lengkap'] ?? null;
+                    $namaKelas = $cleanRow['kelas'] ?? $cleanRow['nama_kelas'] ?? $cleanRow['nama kelas'] ?? null;
+                    $jk        = $cleanRow['jenis_kelamin'] ?? $cleanRow['jk'] ?? 'L';
+
+                    if (!empty($nama) && !empty($nis) && !empty($namaKelas)) {
+                        // Format nama kelas dari Excel
+                        $formattedExcelKelas = $this->formatNamaKelas($namaKelas);
+
+                        // Cari ID Kelas yang cocok berdasarkan nama kelas yang sudah diformat
+                        $kelasMatched = $kelases->firstWhere('formatted', $formattedExcelKelas);
+
+                        if ($kelasMatched) {
                             Siswa::updateOrCreate(
-                                ['nis' => $nis], // Gunakan 'nis' sebagai kunci pencarian utama
+                                ['nis' => (string) $nis],
                                 [
-                                    'nisn'          => $row['nisn'] ?? $nis,
+                                    'nisn'          => $cleanRow['nisn'] ?? (string) $nis,
                                     'nama'          => $nama,
-                                    'kelas_id'      => $kelas->id,
-                                    'jenis_kelamin' => strtoupper($jk),
+                                    'kelas_id'      => $kelasMatched['id'],
+                                    'jenis_kelamin' => strtoupper(substr($jk, 0, 1)),
                                     'status'        => 'aktif',
                                 ]
                             );
+                            $importedCount++;
+                        } else {
+                            $failedClassCount++;
                         }
                     }
-                });
+                }
 
-                return redirect()->route('admin.siswa.index')->with('success', 'Data Siswa berhasil diimport!');
+                if ($importedCount === 0) {
+                    if ($failedClassCount > 0) {
+                        return redirect()->route('admin.siswa.index')
+                            ->with('error', "Gagal mengimport data! $failedClassCount siswa tidak dapat di-import karena Kelas tidak ditemukan di Master Data.");
+                    }
+                    return redirect()->route('admin.siswa.index')
+                        ->with('error', 'Gagal mengimport data! Pastikan kolom header Excel sesuai (nis, nama, kelas, jenis_kelamin).');
+                }
+
+                return redirect()->route('admin.siswa.index')
+                    ->with('success', "Berhasil mengimport $importedCount data siswa!");
 
             } catch (\Exception $e) {
                 return back()->with('error', 'Gagal membaca file: ' . $e->getMessage());
             }
+        }
+        /**
+         * Standarisasi format nama kelas (contoh: 'xrpl1', 'X-RPL-1' -> 'X RPL 1')
+         */
+        private function formatNamaKelas($input)
+        {
+            if (empty($input)) return '';
+
+            // 1. Ubah strip (-) menjadi spasi & jadikan uppercase
+            $string = strtoupper(str_replace('-', ' ', trim($input)));
+
+            // 2. Pisahkan huruf dan angka yang berdempetan dengan spasi
+            // Contoh: 'X10' -> 'X 10', 'RPL1' -> 'RPL 1', '10RPL' -> '10 RPL'
+            $string = preg_replace('/([a-zA-Z]+)(\d+)/', '$1 $2', $string);
+            $string = preg_replace('/(\d+)([a-zA-Z]+)/', '$1 $2', $string);
+
+            // 3. Gabungkan spasi ganda menjadi spasi tunggal
+            $string = preg_replace('/\s+/', ' ', $string);
+
+            return trim($string);
         }
 
     public function destroy(Siswa $siswa)

@@ -28,6 +28,14 @@ class KelasController extends Controller
         // TAMBAHKAN $jurusans KE DALAM COMPACT
         return view('admin.kelas.create', compact('jurusans', 'gurus'));
     }
+    private function formatNamaKelas($input)
+    {
+        if (empty($input)) return '';
+        $string = strtoupper(str_replace('-', ' ', trim($input)));
+        $string = preg_replace('/([a-zA-Z]+)(\d+)/', '$1 $2', $string);
+        $string = preg_replace('/(\d+)([a-zA-Z]+)/', '$1 $2', $string);
+        return trim(preg_replace('/\s+/', ' ', $string));
+    }
 
     public function store(Request $request)
     {
@@ -81,6 +89,7 @@ class KelasController extends Controller
         
         return redirect()->route('admin.kelas.index')->with('success', 'Data Kelas berhasil diperbarui.');
     }
+    
 
     public function destroy(Kelas $kela)
     {
