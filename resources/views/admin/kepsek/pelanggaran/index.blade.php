@@ -1,10 +1,6 @@
 @extends('layouts.app')
-
+@section('header_title', 'Ringkasan Pelanggaran Siswa (Kepala Sekolah)')
 @section('content')
-<div class="page-heading mb-3">
-    <h3>Ringkasan Pelanggaran Siswa</h3>
-</div>
-
 <div class="page-content">
     <section class="row">
         <div class="col-12">

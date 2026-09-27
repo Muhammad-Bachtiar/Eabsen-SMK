@@ -1,9 +1,7 @@
 @extends('layouts.app')
 
+@section('header_title', 'Rekap Presensi Harian Siswa (Kepala Sekolah)')
 @section('content')
-<div class="page-heading d-flex justify-content-between align-items-center mb-3">
-    <h3>Rekap Presensi Harian Siswa (Kepala Sekolah)</h3>
-</div>
 
 <div class="page-content">
     <section class="row">

@@ -3,10 +3,6 @@
 @section('header_title', 'Rekap Presensi Kelas Binaan')
 
 @section('content')
-<div class="page-heading mb-3">
-    <h3>Rekap Presensi Kelas Binaan</h3>
-    <p class="text-subtitle text-muted">Pantau rekapitulasi kehadiran harian dan akumulasi per semester untuk kelas binaan BK.</p>
-</div>
 
 <div class="page-content">
     <!-- Filter Kelas Binaan & Tanggal -->

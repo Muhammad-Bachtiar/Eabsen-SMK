@@ -160,6 +160,7 @@ public function store(Request $request)
             'kelas_id'     => $request->kelas_id,
             'mapel_id'     => $request->mapel_id,
             'dicatat_oleh' => Auth::id(),
+            'jenis'        => 'mapel',
         ]);
 
         foreach ($request->jam as $jamKe) {

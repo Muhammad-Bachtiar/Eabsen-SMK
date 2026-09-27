@@ -1,9 +1,6 @@
 @extends('layouts.app')
-
+@section('header_title', 'Persetujuan Pelanggaran')
 @section('content')
-<div class="page-heading">
-    <h3>Persetujuan Pelanggaran Siswa</h3>
-</div>
 <div class="page-content">
     <section class="row">
         <div class="col-12">

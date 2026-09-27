@@ -93,7 +93,7 @@
                         <div class="logo">
                             <a href="{{ route('admin.dashboard') }}" class="d-flex align-items-center text-decoration-none">
                                 <div>
-                                    <h4 class="text-primary mb-0 fw-bold">E-Absen</h4>
+                                    <h4 class="text-primary mb-0 fw-bold">E-Jurnal SMKSA</h4>
                                 </div>
                             </a>
                         </div>
@@ -133,7 +133,7 @@
                     </div>
                 </div>
                 
-                <div class="sidebar-menu">
+                <div class="menu">
                     @php
                         $role = Auth::user()->role->nama_role ?? '';
                         $isKoordinatorBK = Auth::user()->is_koordinator_bk ?? false;
@@ -161,140 +161,128 @@
                                 <span>Dashboard</span>
                             </a>
                         </li>
-                        
-                        <!-- Master Data (Admin Only) -->
+                        <!-- 1. Master Data (Admin Only) - COLLAPSE -->
                         @if($role == 'admin')
-                        <li class="sidebar-title">Master Data</li>
-                        
-                        <li class="sidebar-item {{ request()->routeIs('admin.kelas.*') ? 'active' : '' }}">
-                            <a href="{{ route('admin.kelas.index') }}" class='sidebar-link'>
-                                <i class="bi bi-door-open-fill"></i>
-                                <span>Data Kelas</span>
+                        @php
+                            $isMasterActive = request()->routeIs(['admin.kelas.*', 'admin.mapel.*', 'admin.siswa.*', 'admin.guru.*', 'admin.jam-pelajaran.*', 'admin.penugasan-bk.*']);
+                        @endphp
+                        <li class="sidebar-item has-sub {{ $isMasterActive ? 'active submenu-open' : '' }}">
+                            <a href="#" class='sidebar-link'>
+                                <i class="bi bi-stack"></i>
+                                <span>Master Data</span>
                             </a>
-                        </li>
-
-                        <li class="sidebar-item {{ request()->routeIs('admin.mapel.*') ? 'active' : '' }}">
-                            <a href="{{ route('admin.mapel.index') }}" class='sidebar-link'>
-                                <i class="bi bi-book-half"></i>
-                                <span>Mata Pelajaran</span>
-                            </a>
-                        </li>
-
-                        <li class="sidebar-item {{ request()->routeIs('admin.siswa.*') ? 'active' : '' }}">
-                            <a href="{{ route('admin.siswa.index') }}" class='sidebar-link'>
-                                <i class="bi bi-people-fill"></i>
-                                <span>Data Siswa</span>
-                            </a>
-                        </li>
-
-                        <li class="sidebar-item {{ request()->routeIs('admin.guru.*') ? 'active' : '' }}">
-                            <a href="{{ route('admin.guru.index') }}" class='sidebar-link'>
-                                <i class="bi bi-person-badge-fill"></i>
-                                <span>Data Guru</span>
-                            </a>
-                        </li>
-
-                        <li class="sidebar-item {{ request()->routeIs('admin.jam-pelajaran.*') ? 'active' : '' }}">
-                            <a href="{{ route('admin.jam-pelajaran.index') }}" class='sidebar-link'>
-                                <i class="bi bi-clock-history"></i>
-                                <span>Jam Pelajaran</span>
-                            </a>
-                        </li>
-
-
-                        <li class="sidebar-item {{ request()->routeIs('admin.penugasan-bk.*') ? 'active' : '' }}">
-                            <a href="{{ route('admin.penugasan-bk.index') }}" class='sidebar-link'>
-                                <i class="bi bi-person-check-fill"></i>
-                                <span>Penugasan Guru BK</span>
-                            </a>
+                            <ul class="submenu {{ $isMasterActive ? 'active' : '' }}">
+                                <li class="submenu-item {{ request()->routeIs('admin.kelas.*') ? 'active' : '' }}">
+                                    <a href="{{ route('admin.kelas.index') }}" class="submenu-link">Data Kelas</a>
+                                </li>
+                                <li class="submenu-item {{ request()->routeIs('admin.mapel.*') ? 'active' : '' }}">
+                                    <a href="{{ route('admin.mapel.index') }}" class="submenu-link">Mata Pelajaran</a>
+                                </li>
+                                <li class="submenu-item {{ request()->routeIs('admin.siswa.*') ? 'active' : '' }}">
+                                    <a href="{{ route('admin.siswa.index') }}" class="submenu-link">Data Siswa</a>
+                                </li>
+                                <li class="submenu-item {{ request()->routeIs('admin.guru.*') ? 'active' : '' }}">
+                                    <a href="{{ route('admin.guru.index') }}" class="submenu-link">Data Guru</a>
+                                </li>
+                                <li class="submenu-item {{ request()->routeIs('admin.jam-pelajaran.*') ? 'active' : '' }}">
+                                    <a href="{{ route('admin.jam-pelajaran.index') }}" class="submenu-link">Jam Pelajaran</a>
+                                </li>
+                                <li class="submenu-item {{ request()->routeIs('admin.penugasan-bk.*') ? 'active' : '' }}">
+                                    <a href="{{ route('admin.penugasan-bk.index') }}" class="submenu-link">Penugasan BK</a>
+                                </li>
+                            </ul>
                         </li>
                         @endif
 
-                        <!-- Presensi Mengajar (Khusus Guru) -->
+                        <!-- 2. Presensi Mengajar (Guru / Admin) - COLLAPSE -->
                         @if(in_array($role, ['admin', 'guru']))
-                        <li class="sidebar-title">Presensi Mengajar</li>
-                        </li>
-                        <li class="sidebar-item {{ request()->routeIs('guru.rekap_kelas.*') ? 'active' : '' }}">
-                            <a href="{{ route('guru.rekap_kelas.index') }}" class='sidebar-link'>
-                                <i class="bi bi-journal-bookmark-fill"></i>
-                                <span>Rekap Absen Kelas</span>
-                            </a>
-                        </li>
-                        @endif
-
-                        <!-- Bimbingan Konseling -->
-                        @if(in_array($role, ['admin', 'bk']))
-                        <li class="sidebar-title">Bimbingan Konseling</li>
-
-                        @if($role == 'admin' || ($role == 'bk' && $isKoordinatorBK))
-                        <li class="sidebar-item {{ request()->routeIs('koordinator-bk.jenis-pelanggaran.*') ? 'active' : '' }}">
-                            <a href="{{ route('koordinator-bk.jenis-pelanggaran.index') }}" class='sidebar-link'>
-                                <i class="bi bi-exclamation-triangle-fill"></i>
-                                <span>Jenis Pelanggaran</span>
-                            </a>
-                        </li>
-                        @endif
-
-                        @if(in_array($role, ['bk', 'admin']))
-                        <!-- 1. Input Presensi Kelas Binaan (jenis = bk) -->
-                        <li class="sidebar-item {{ request()->routeIs('bk.presensi.*') ? 'active' : '' }}">
-                            <a href="{{ route('bk.presensi.index') }}" class='sidebar-link'>
-                                <i class="bi bi-clipboard-check-fill"></i>
-                                <span>Presensi Kelas Binaan</span>
-                            </a>
-                        </li>
-
-                        <!-- 2. Rekap Presensi Kelas (Gabungan Guru Mapel + BK) -->
-                        <li class="sidebar-item {{ request()->routeIs('bk.rekap_presensi.*') ? 'active' : '' }}">
-                            <a href="{{ route('bk.rekap_presensi.index') }}" class='sidebar-link'>
-                                <i class="bi bi-journal-text"></i>
-                                <span>Rekap Presensi Kelas</span>
-                            </a>
-                        </li>
-
-                        <!-- 3. Pelanggaran Siswa -->
-                        <li class="sidebar-item {{ request()->routeIs('bk.pelanggaran.*') ? 'active' : '' }}">
-                            <a href="{{ route('bk.pelanggaran.index') }}" class='sidebar-link'>
-                                <i class="bi bi-exclamation-octagon-fill"></i>
-                                <span>Pelanggaran Siswa</span>
-                            </a>
-                        </li>
-                        @endif
-                        
-                        @endif
-                        @if(in_array($role, ['admin', 'waka_kesiswaan']))
-                        <li class="sidebar-title">Kesiswaan</li>
-
-                        <li class="sidebar-item {{ request()->routeIs('waka.rekap_presensi.*') ? 'active' : '' }}">
-                            <a href="{{ route('waka.rekap_presensi.index') }}" class='sidebar-link'>
-                                <i class="bi bi-file-earmark-bar-graph-fill"></i>
-                                <span>Rekap Presensi Harian</span>
-                            </a>
-                        </li>
-
-                        <li class="sidebar-item {{ request()->routeIs('waka.approval.*') ? 'active' : '' }}">
-                            <a href="{{ route('waka.approval.index') }}" class='sidebar-link'>
-                                <i class="bi bi-check2-square"></i>
-                                <span>Persetujuan Pelanggaran</span>
-                            </a>
-                        </li>
-                        @endif
-                        <!-- Executive Monitoring (Admin & Kepala Sekolah) -->
-                        @if(in_array($role, ['admin', 'kepala_sekolah']))
-                        <li class="sidebar-title">Laporan & Eksekutif</li>
-
-                        <li class="sidebar-item {{ request()->routeIs('kepsek.rekap_presensi.*') ? 'active' : '' }}">
-                            <a href="{{ route('kepsek.rekap_presensi.index') }}" class='sidebar-link'>
-                                <i class="bi bi-file-earmark-bar-graph-fill"></i>
-                                <span>Rekap Presensi Harian</span>
-                            </a>
-                        </li>
-
-                        <li class="sidebar-item {{ request()->routeIs('kepsek.pelanggaran.*') ? 'active' : '' }}">
-                            <a href="{{ route('kepsek.pelanggaran.index') }}" class='sidebar-link'>
+                        @php
+                            $isPresensiActive = request()->routeIs(['guru.rekap_kelas.*']);
+                        @endphp
+                        <li class="sidebar-item has-sub {{ $isPresensiActive ? 'active submenu-open' : '' }}">
+                            <a href="#" class='sidebar-link'>
                                 <i class="bi bi-journal-check"></i>
-                                <span>Ringkasan Pelanggaran</span>
+                                <span>Presensi Mengajar</span>
                             </a>
+                            <ul class="submenu {{ $isPresensiActive ? 'active' : '' }}">
+                                <li class="submenu-item {{ request()->routeIs('guru.rekap_kelas.*') ? 'active' : '' }}">
+                                    <a href="{{ route('guru.rekap_kelas.index') }}" class="submenu-link">Rekap Absen Kelas</a>
+                                </li>
+                            </ul>
+                        </li>
+                        @endif
+
+                        <!-- 3. Bimbingan Konseling - COLLAPSE -->
+                        @if(in_array($role, ['admin', 'bk']))
+                        @php
+                            $isBkActive = request()->routeIs(['koordinator-bk.jenis-pelanggaran.*', 'bk.presensi.*', 'bk.rekap_presensi.*', 'bk.pelanggaran.*']);
+                        @endphp
+                        <li class="sidebar-item has-sub {{ $isBkActive ? 'active submenu-open' : '' }}">
+                            <a href="#" class='sidebar-link'>
+                                <i class="bi bi-person-heart"></i>
+                                <span>Bimbingan Konseling</span>
+                            </a>
+                            <ul class="submenu {{ $isBkActive ? 'active' : '' }}">
+                                @if($role == 'admin' || ($role == 'bk' && $isKoordinatorBK))
+                                <li class="submenu-item {{ request()->routeIs('koordinator-bk.jenis-pelanggaran.*') ? 'active' : '' }}">
+                                    <a href="{{ route('koordinator-bk.jenis-pelanggaran.index') }}" class="submenu-link">Jenis Pelanggaran</a>
+                                </li>
+                                @endif
+
+                                @if(in_array($role, ['bk', 'admin']))
+                                <li class="submenu-item {{ request()->routeIs('bk.presensi.*') ? 'active' : '' }}">
+                                    <a href="{{ route('bk.presensi.index') }}" class="submenu-link">Presensi Kelas Binaan</a>
+                                </li>
+                                <li class="submenu-item {{ request()->routeIs('bk.rekap_presensi.*') ? 'active' : '' }}">
+                                    <a href="{{ route('bk.rekap_presensi.index') }}" class="submenu-link">Rekap Presensi Kelas</a>
+                                </li>
+                                <li class="submenu-item {{ request()->routeIs('bk.pelanggaran.*') ? 'active' : '' }}">
+                                    <a href="{{ route('bk.pelanggaran.index') }}" class="submenu-link">Pelanggaran Siswa</a>
+                                </li>
+                                @endif
+                            </ul>
+                        </li>
+                        @endif
+
+                        <!-- 4. Kesiswaan - COLLAPSE -->
+                        @if(in_array($role, ['admin', 'waka_kesiswaan']))
+                        @php
+                            $isKesiswaanActive = request()->routeIs(['waka.rekap_presensi.*', 'waka.approval.*']);
+                        @endphp
+                        <li class="sidebar-item has-sub {{ $isKesiswaanActive ? 'active submenu-open' : '' }}">
+                            <a href="#" class='sidebar-link'>
+                                <i class="bi bi-shield-check"></i>
+                                <span>Kesiswaan</span>
+                            </a>
+                            <ul class="submenu {{ $isKesiswaanActive ? 'active' : '' }}">
+                                <li class="submenu-item {{ request()->routeIs('waka.rekap_presensi.*') ? 'active' : '' }}">
+                                    <a href="{{ route('waka.rekap_presensi.index') }}" class="submenu-link">Rekap Presensi Harian</a>
+                                </li>
+                                <li class="submenu-item {{ request()->routeIs('waka.approval.*') ? 'active' : '' }}">
+                                    <a href="{{ route('waka.approval.index') }}" class="submenu-link">Persetujuan Pelanggaran</a>
+                                </li>
+                            </ul>
+                        </li>
+                        @endif
+
+                        <!-- 5. Laporan & Eksekutif - COLLAPSE -->
+                        @if(in_array($role, ['admin', 'kepala_sekolah']))
+                        @php
+                            $isEksekutifActive = request()->routeIs(['kepsek.rekap_presensi.*', 'kepsek.pelanggaran.*']);
+                        @endphp
+                        <li class="sidebar-item has-sub {{ $isEksekutifActive ? 'active submenu-open' : '' }}">
+                            <a href="#" class='sidebar-link'>
+                                <i class="bi bi-file-earmark-bar-graph"></i>
+                                <span>Laporan & Eksekutif</span>
+                            </a>
+                            <ul class="submenu {{ $isEksekutifActive ? 'active' : '' }}">
+                                <li class="submenu-item {{ request()->routeIs('kepsek.rekap_presensi.*') ? 'active' : '' }}">
+                                    <a href="{{ route('kepsek.rekap_presensi.index') }}" class="submenu-link">Rekap Presensi Harian</a>
+                                </li>
+                                <li class="submenu-item {{ request()->routeIs('kepsek.pelanggaran.*') ? 'active' : '' }}">
+                                    <a href="{{ route('kepsek.pelanggaran.index') }}" class="submenu-link">Ringkasan Pelanggaran</a>
+                                </li>
+                            </ul>
                         </li>
                         @endif
 
@@ -313,7 +301,7 @@
                     </ul>
                 </div>
             </div>
-        </div>
+        </div>                        
         
         <!-- Main Content Area -->
         <div id="main" class="layout-navbar">
@@ -332,23 +320,38 @@
 
                         <div class="collapse navbar-collapse" id="navbarSupportedContent">
                             <div class="navbar-nav ms-auto mb-lg-0">
-                                <div class="user-menu d-flex align-items-center">
-                                    <div class="user-name text-end me-3">
-                                        <h6 class="mb-0 text-gray-600 fw-bold">{{ Auth::user()->nama ?? Auth::user()->name ?? 'Administrator' }}</h6>
-                                        <p class="mb-0 text-sm text-primary fw-semibold">{{ strtoupper(Auth::user()->role->nama_role ?? 'ADMIN') }}</p>
-                                    </div>
-                                    <div class="user-img d-flex align-items-center">
-                                        <div class="avatar avatar-md bg-primary text-white d-flex align-items-center justify-content-center rounded-circle shadow-sm" style="width: 40px; height: 40px;">
-                                            <i class="bi bi-person-fill fs-4"></i>
+                                <!-- User Profile Dropdown -->
+                                <div class="dropdown">
+                                    <a href="#" data-bs-toggle="dropdown" aria-expanded="false" class="text-decoration-none">
+                                        <div class="user-menu d-flex align-items-center">
+                                            <div class="user-name text-end me-3">
+                                                <h6 class="mb-0 text-gray-600 fw-bold">{{ Auth::user()->nama ?? Auth::user()->name ?? 'Administrator' }}</h6>
+                                                <p class="mb-0 text-sm text-primary fw-semibold">{{ strtoupper(Auth::user()->role->nama_role ?? 'ADMIN') }}</p>
+                                            </div>
+                                            <div class="user-img d-flex align-items-center">
+                                                <div class="avatar avatar-md bg-primary text-white d-flex align-items-center justify-content-center rounded-circle shadow-sm" style="width: 40px; height: 40px;">
+                                                    <i class="bi bi-person-fill fs-5" style="line-height: 0;"></i>
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
+                                    </a>
+                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 mt-2" aria-labelledby="dropdownMenuButton" style="min-width: 11rem;">
+                                            <a class="dropdown-item text-danger d-flex align-items-center gap-2" href="javascript:void(0)" onclick="document.getElementById('logout-form-navbar').submit()">
+                                                <i class="bi bi-box-arrow-left"></i>
+                                                <span>Keluar / Logout</span>
+                                            </a>
+                                            <form action="{{ route('logout') }}" method="POST" id="logout-form-navbar" style="display:none;">
+                                                @csrf
+                                            </form>
+                                        </li>
+                                    </ul>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </nav>
             </header>
-            
+
             <div id="main-content" class="pt-0">
                 <div class="page-heading mb-3">
                     <div class="page-title">
@@ -404,10 +407,11 @@
                 <footer>
                     <div class="footer clearfix mb-0 text-muted mt-5">
                         <div class="float-start">
-                            <p class="mb-0">2026 &copy; E-Absen SMK - Solusi Presensi Digital</p>
+                            <p class="mb-0">
+                                2026 &copy; <a href="https://rplsmksa.com/" target=_blank>Codepelita</a></p>
                         </div>
                         <div class="float-end">
-                            <p class="mb-0">Dibuat dengan template <span class="text-primary fw-semibold">Mazer</span></p>
+                            <p class="mb-0">E-Jurnal SMKSA <span class="text-primary fw-semibold">Mazer</span></p>
                         </div>
                     </div>
                 </footer>

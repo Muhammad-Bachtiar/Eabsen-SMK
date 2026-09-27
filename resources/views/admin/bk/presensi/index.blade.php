@@ -4,10 +4,6 @@
 
 @section('content')
 <div class="page-heading mb-3 d-flex justify-content-between align-items-center">
-    <div>
-        <h3>Presensi Kelas Binaan</h3>
-        <p class="text-subtitle text-muted">Daftar riwayat presensi bimbingan konseling yang telah diinput</p>
-    </div>
     <a href="{{ route('bk.presensi.create') }}" class="btn btn-primary">
         <i class="bi bi-plus-lg me-1"></i> Input Presensi BK
     </a>
