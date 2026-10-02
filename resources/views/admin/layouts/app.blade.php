@@ -370,35 +370,46 @@
                 </div>
                 
                 <!-- Global Alerts -->
-                @if(session('success'))
-                    <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
-                        <div class="d-flex align-items-center">
-                            <i class="bi bi-check-circle-fill fs-4 me-2"></i>
-                            <div>{{ session('success') }}</div>
-                        </div>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                @endif
+                {{-- Toast Container (pojok kanan atas) --}}
+                <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100;">
 
-                @if(session('error'))
-                    <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
-                        <div class="d-flex align-items-center">
-                            <i class="bi bi-exclamation-octagon-fill fs-4 me-2"></i>
-                            <div>{{ session('error') }}</div>
+                    @if(session('success'))
+                    <div id="toastSuccess" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                        <div class="d-flex">
+                            <div class="toast-body">
+                                <i class="bi bi-check-circle-fill me-2"></i>
+                                {{ session('success') }}
+                            </div>
+                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
                         </div>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
-                @endif
+                    @endif
 
-                @if(session('warning'))
-                    <div class="alert alert-warning alert-dismissible fade show shadow-sm" role="alert">
-                        <div class="d-flex align-items-center">
-                            <i class="bi bi-exclamation-triangle-fill fs-4 me-2"></i>
-                            <div>{{ session('warning') }}</div>
+                    @if(session('error'))
+                    <div id="toastError" class="toast align-items-center text-bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                        <div class="d-flex">
+                            <div class="toast-body">
+                                <i class="bi bi-exclamation-octagon-fill me-2"></i>
+                                {{ session('error') }}
+                            </div>
+                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
                         </div>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
-                @endif
+                    @endif
+
+                    @if(session('warning'))
+                    <div id="toastWarning" class="toast align-items-center text-bg-warning border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                        <div class="d-flex">
+                            <div class="toast-body">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                {{ session('warning') }}
+                            </div>
+                            <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                    </div>
+                    @endif
+
+                </div>
                 
                 <div class="page-content">
                     @yield('content')
@@ -474,6 +485,73 @@
             }
         });
     </script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        ['toastSuccess', 'toastError', 'toastWarning'].forEach(function (id) {
+            var el = document.getElementById(id);
+            if (el) {
+                new bootstrap.Toast(el, { delay: 4000, autohide: true }).show();
+            }
+        });
+    });
+
+    // ============================================================
+    // FUNGSI GLOBAL showToast() — dipanggil dari AJAX / view mana pun
+    // ============================================================
+    window.showToast = function (type, message, delay = 4000) {
+        const bgMap = {
+            success: 'text-bg-success',
+            error:   'text-bg-danger',
+            warning: 'text-bg-warning',
+            info:    'text-bg-info'
+        };
+        const iconMap = {
+            success: 'bi-check-circle-fill',
+            error:   'bi-exclamation-octagon-fill',
+            warning: 'bi-exclamation-triangle-fill',
+            info:    'bi-info-circle-fill'
+        };
+
+        const bg   = bgMap[type]   || 'text-bg-secondary';
+        const icon = iconMap[type] || 'bi-info-circle-fill';
+
+        // Cari / buat container
+        let container = document.getElementById('globalToastContainer');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'globalToastContainer';
+            container.className = 'toast-container position-fixed top-0 end-0 p-3';
+            container.style.zIndex = '1100';
+            document.body.appendChild(container);
+        }
+
+        // Buat elemen toast
+        const toastEl = document.createElement('div');
+        toastEl.className = `toast align-items-center ${bg} border-0`;
+        toastEl.setAttribute('role', 'alert');
+        toastEl.setAttribute('aria-live', 'assertive');
+        toastEl.setAttribute('aria-atomic', 'true');
+        toastEl.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="bi ${icon} me-2"></i>
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        `;
+        container.appendChild(toastEl);
+
+        // Tampilkan
+        const toast = new bootstrap.Toast(toastEl, { delay: delay, autohide: true });
+        toast.show();
+
+        // Hapus elemen setelah tertutup, biar DOM tidak menumpuk
+        toastEl.addEventListener('hidden.bs.toast', function () {
+            toastEl.remove();
+        });
+    };
+</script>
     @stack('scripts')
 </body>
 </html>

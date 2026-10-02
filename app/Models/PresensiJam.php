@@ -21,6 +21,6 @@ class PresensiJam extends Model
 
     public function jamPelajaran(): BelongsTo
     {
-        return $this->belongsTo(JamPelajaran::class);
+        return $this->belongsTo(JamPelajaran::class, 'jam_pelajaran_id');
     }
 }

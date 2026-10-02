@@ -24,14 +24,14 @@ class DashboardController extends Controller
      * Router dashboard berdasarkan role.
      * Dipakai oleh route umum 'dashboard' (target redirect setelah login).
      */
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
         $role = $user->role->nama_role ?? 'admin';
 
         return match ($role) {
-            'guru'           => $this->guru(),
-            'bk'             => $this->bk(),
+            'guru'           => $this->guru($request),
+            'bk'             => $this->bk($request),
             'waka_kesiswaan' => $this->waka(),
             'kepala_sekolah' => $this->kepalaSekolah(),
             default          => $this->admin(),
@@ -158,15 +158,48 @@ class DashboardController extends Controller
      * Dashboard BK / Koordinator BK.
      * Koordinator BK mendapat dashboard khusus.
      */
-    public function bk()
-    {
-        $user = Auth::user();
+public function bk(Request $request)
+{
+    $user = Auth::user();
 
-        if ($user->is_koordinator_bk) {
-            return view('admin.koordinator-bk.dashboard', compact('user'));
-        }
+    if ($user->is_koordinator_bk) {
+        return view('admin.koordinator-bk.dashboard', compact('user'));
+    }
 
-        $kelasBinaan = \DB::table('bk_kelas')
+    // ============================================================
+    // A. DATA UNTUK FORM PRESENSI (accordion)
+    // ============================================================
+    $kelasBinaanIds = \DB::table('bk_kelas')
+        ->where('bk_user_id', $user->id)
+        ->pluck('kelas_id')
+        ->toArray();
+
+    // Semua kelas, tapi beri flag is_binaan
+    $kelases = Kelas::orderBy('nama_kelas', 'asc')->get()->map(function ($k) use ($kelasBinaanIds) {
+        $k->is_binaan = in_array($k->id, $kelasBinaanIds);
+        return $k;
+    });
+
+    $mapels        = MataPelajaran::orderBy('nama_mapel', 'asc')->get();
+    $jamPelajarans = JamPelajaran::orderBy('jam_ke', 'asc')->get();
+
+    $tanggal  = $request->input('tanggal', date('Y-m-d'));
+    $kelas_id = $request->input('kelas_id');
+    $mapel_id = $request->input('mapel_id');
+
+    $presensiId       = $request->input('presensi_id');
+    $jamYangBaruDiisi = [];
+
+    if ($presensiId) {
+        $jamYangBaruDiisi = PresensiJam::where('presensi_id', $presensiId)
+            ->pluck('jam_pelajaran_id')
+            ->toArray();
+    }
+
+    // ============================================================
+    // B. DATA WIDGET (yang sudah ada, tidak berubah)
+    // ============================================================
+    $kelasBinaan = \DB::table('bk_kelas')
         ->join('kelas', 'bk_kelas.kelas_id', '=', 'kelas.id')
         ->where('bk_kelas.bk_user_id', $user->id)
         ->select('kelas.id', 'kelas.nama_kelas')
@@ -174,23 +207,20 @@ class DashboardController extends Controller
 
     $totalSiswaBinaan = 0;
     if ($kelasBinaan->isNotEmpty()) {
-        $totalSiswaBinaan = \App\Models\Siswa::whereIn('kelas_id', $kelasBinaan->pluck('id'))->count();
+        $totalSiswaBinaan = Siswa::whereIn('kelas_id', $kelasBinaan->pluck('id'))->count();
     }
 
-    // 2. Ringkasan Statistik Pelanggaran
-    $totalPelanggaran = \App\Models\PelanggaranSiswa::count();
-    $kasusMenunggu    = \App\Models\PelanggaranSiswa::where('status', 'menunggu_persetujuan')->count();
-    $kasusSelesai     = \App\Models\PelanggaranSiswa::where('status', 'disetujui')->count();
+    $totalPelanggaran = PelanggaranSiswa::count();
+    $kasusMenunggu    = PelanggaranSiswa::where('status', 'menunggu_persetujuan')->count();
+    $kasusSelesai     = PelanggaranSiswa::whereIn('status', ['disetujui', 'selesai'])->count();
 
-    // 3. 5 Pelanggaran Terbaru
-    $pelanggaranTerbaru = \App\Models\PelanggaranSiswa::with(['siswa', 'jenisPelanggaran'])
+    $pelanggaranTerbaru = PelanggaranSiswa::with(['siswa', 'jenisPelanggaran'])
         ->orderBy('created_at', 'desc')
         ->limit(5)
         ->get();
 
-    // 4. Top 5 Siswa Sering Alpha
-    $topAlpha = \App\Models\PresensiDetail::with('siswa.kelas')
-        ->where('status', 'Alpha')
+    $topAlpha = PresensiDetail::with('siswa.kelas')
+        ->where('status', 'alpa')
         ->selectRaw('siswa_id, count(*) as total_alpha')
         ->groupBy('siswa_id')
         ->orderBy('total_alpha', 'desc')
@@ -198,9 +228,15 @@ class DashboardController extends Controller
         ->get();
 
     return view('admin.bk.dashboard', compact(
-        'user', 'kelasBinaan', 'totalSiswaBinaan', 'totalPelanggaran', 
-        'kasusMenunggu', 'kasusSelesai', 'pelanggaranTerbaru', 'topAlpha'));
-    }
+        // Widget lama
+        'user', 'kelasBinaan', 'totalSiswaBinaan', 'totalPelanggaran',
+        'kasusMenunggu', 'kasusSelesai', 'pelanggaranTerbaru', 'topAlpha',
+        // Form presensi baru
+        'kelases', 'mapels', 'jamPelajarans',
+        'tanggal', 'kelas_id', 'mapel_id',
+        'presensiId', 'jamYangBaruDiisi'
+    ));
+}
 
     /**
      * Dashboard Koordinator BK (explicit).

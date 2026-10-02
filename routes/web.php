@@ -99,6 +99,8 @@ Route::middleware(['auth', 'role:admin,bk'])->prefix('bk')->name('bk.')->group(f
     Route::get('/dashboard', [DashboardController::class, 'bk'])->name('dashboard');
 
     // 1. Presensi Kelas Binaan (jenis = bk)
+    Route::get('presensi/get-data', [\App\Http\Controllers\Bk\PresensiBkController::class, 'getData'])
+    ->name('presensi.getData');
     Route::get('presensi', [\App\Http\Controllers\Bk\PresensiBkController::class, 'index'])->name('presensi.index');
     Route::get('presensi/create', [\App\Http\Controllers\Bk\PresensiBkController::class, 'create'])->name('presensi.create');
     Route::post('presensi', [\App\Http\Controllers\Bk\PresensiBkController::class, 'store'])->name('presensi.store');
