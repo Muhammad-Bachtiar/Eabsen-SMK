@@ -26,9 +26,9 @@ class RoleMiddleware
         $allowed = in_array($userRole, $roles);
 
         // Khusus koordinator_bk: role di DB tetap 'bk', tapi harus punya flag is_koordinator_bk
-        if (! $allowed && in_array('koordinator_bk', $roles)) {
-            $allowed = ($userRole === 'bk' && $user->is_koordinator_bk);
-        }
+        // if (! $allowed && in_array('koordinator_bk', $roles)) {
+        //     $allowed = ($userRole === 'bk' && $user->is_koordinator_bk);
+        // }
 
         abort_unless(
             $allowed,

@@ -146,8 +146,6 @@
                                 <a href="{{ route('admin.dashboard') }}" class='sidebar-link'>
                             @elseif($role == 'guru')
                                 <a href="{{ route('guru.dashboard') }}" class='sidebar-link'>
-                            @elseif($role == 'bk' && $isKoordinatorBK)
-                                <a href="{{ route('koordinator-bk.dashboard') }}" class='sidebar-link'>
                             @elseif($role == 'bk')
                                 <a href="{{ route('bk.dashboard') }}" class='sidebar-link'>
                             @elseif($role == 'waka_kesiswaan')
@@ -215,7 +213,10 @@
                         <!-- 3. Bimbingan Konseling - COLLAPSE -->
                         @if(in_array($role, ['admin', 'bk']))
                         @php
-                            $isBkActive = request()->routeIs(['koordinator-bk.jenis-pelanggaran.*', 'bk.presensi.*', 'bk.rekap_presensi.*', 'bk.pelanggaran.*']);
+                            $isBkActive = request()->routeIs([
+                            'koordinator-bk.jenis-pelanggaran.*', 
+                            'bk.presensi.*', 'bk.rekap_presensi.*', 
+                            'bk.pelanggaran.*']);
                         @endphp
                         <li class="sidebar-item has-sub {{ $isBkActive ? 'active submenu-open' : '' }}">
                             <a href="#" class='sidebar-link'>
@@ -227,12 +228,20 @@
                                 <li class="submenu-item {{ request()->routeIs('koordinator-bk.jenis-pelanggaran.*') ? 'active' : '' }}">
                                     <a href="{{ route('koordinator-bk.jenis-pelanggaran.index') }}" class="submenu-link">Jenis Pelanggaran</a>
                                 </li>
+                                <li class="submenu-item {{ request()->routeIs('waka.approval.*') || request()->routeIs('koordinator-bk.approval.*') ? 'active' : '' }}">
+                                    @if($role == 'bk' && $isKoordinatorBK)
+                                        <a href="{{ route('koordinator-bk.approval.index') }}" class="submenu-link">Persetujuan Pelanggaran</a>
+                                    @else
+                                        <a href="{{ route('waka.approval.index') }}" class="submenu-link">Persetujuan Pelanggaran</a>
+                                    
+                                        @endif
+                                </li>
                                 @endif
 
                                 @if(in_array($role, ['bk', 'admin']))
-                                <li class="submenu-item {{ request()->routeIs('bk.presensi.*') ? 'active' : '' }}">
+                                <!-- <li class="submenu-item {{ request()->routeIs('bk.presensi.*') ? 'active' : '' }}">
                                     <a href="{{ route('bk.presensi.index') }}" class="submenu-link">Presensi Kelas Binaan</a>
-                                </li>
+                                </li> -->
                                 <li class="submenu-item {{ request()->routeIs('bk.rekap_presensi.*') ? 'active' : '' }}">
                                     <a href="{{ route('bk.rekap_presensi.index') }}" class="submenu-link">Rekap Presensi Kelas</a>
                                 </li>

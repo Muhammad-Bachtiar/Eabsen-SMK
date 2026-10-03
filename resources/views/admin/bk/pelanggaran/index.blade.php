@@ -24,6 +24,7 @@
                                     <th>Pelanggaran</th>
                                     <th>Poin</th>
                                     <th>Status</th>
+                                    <th width="10%" class="text-center">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -47,10 +48,15 @@
                                             <span class="badge bg-secondary">{{ $p->status }}</span>
                                         @endif
                                     </td>
+                                    <td class="text-center">
+                                        <a href="{{ route('bk.pelanggaran.show', $p->id) }}" class="btn btn-sm btn-outline-primary" title="Lihat Detail">
+                                            <i class="bi bi-eye"></i> Detail
+                                        </a>
+                                    </td>
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="6" class="text-center">Belum ada data pelanggaran yang dicatat.</td>
+                                    <td colspan="7" class="text-center">Belum ada data pelanggaran yang dicatat.</td>
                                 </tr>
                                 @endforelse
                             </tbody>

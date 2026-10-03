@@ -6,16 +6,24 @@ use Illuminate\Http\Request;
 use App\Models\PelanggaranSiswa;
 use App\Models\Siswa;
 use App\Models\JenisPelanggaran;
+use App\Models\TindakLanjutPelanggaran;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Barryvdh\DomPDF\Facade\Pdf;
+
 
 class PelanggaranController extends Controller
 {
     public function index()
     {
-        // Tarik semua data pelanggaran yang pernah dicatat, urutkan dari yang terbaru
-        $pelanggarans = PelanggaranSiswa::with(['siswa', 'jenisPelanggaran'])
-                                        ->orderBy('tanggal_kejadian', 'desc')
-                                        ->get();
+        $pelanggarans = PelanggaranSiswa::with([
+                'siswa.kelas.waliKelas',
+                'jenisPelanggaran',
+                'penyetuju',
+                'tindakLanjut.user',
+            ])
+            ->orderBy('tanggal_kejadian', 'desc')
+            ->get();
 
         return view('admin.bk.pelanggaran.index', compact('pelanggarans'));
     }
@@ -52,5 +60,80 @@ class PelanggaranController extends Controller
         ]);
 
         return redirect()->route('bk.pelanggaran.index')->with('success', 'Catatan pelanggaran berhasil disimpan dan menunggu persetujuan!');
+    }
+    public function show($id)
+{
+    $user = Auth::user();
+    $role = $user->role->nama_role ?? null;
+
+    // Validasi akses
+    $allowed = in_array($role, ['admin', 'bk', 'waka_kesiswaan'])
+        || ($role === 'bk' && $user->is_koordinator_bk);
+
+    if (!$allowed) {
+        abort(403, 'Anda tidak memiliki hak untuk melihat detail pelanggaran ini.');
+    }
+
+    $pelanggaran = PelanggaranSiswa::with([
+        'siswa.kelas.waliKelas',
+        'jenisPelanggaran',
+        'pencatat',
+        'penyetuju',
+        'tindakLanjut.user',
+    ])->findOrFail($id);
+
+    // Urutkan riwayat tindak lanjut dari yang paling lama
+    $riwayat = $pelanggaran->tindakLanjut->sortBy('created_at');
+
+    return view('admin.bk.pelanggaran.show', compact('pelanggaran', 'riwayat'));
+}
+
+    public function cetakPdf($id)
+    {
+        $user = Auth::user();
+        $role = $user->role->nama_role ?? null;
+
+        if (!in_array($role, ['admin', 'bk', 'waka_kesiswaan']) && !$user->is_koordinator_bk) {
+            abort(403);
+        }
+
+        $pelanggaran = PelanggaranSiswa::with([
+            'siswa.kelas',
+            'jenisPelanggaran',
+            'pencatat',
+            'penyetuju',
+            'tindakLanjut.user',
+        ])->findOrFail($id);
+
+        $riwayat = $pelanggaran->tindakLanjut->sortBy('created_at');
+
+        $pdf = Pdf::loadView('admin.bk.pelanggaran.pdf', compact('pelanggaran', 'riwayat'))
+            ->setPaper('A4', 'portrait');
+
+        $namaFile = 'Detail_Pelanggaran_' . ($pelanggaran->siswa->nis ?? $pelanggaran->siswa->nisn ?? $pelanggaran->id)
+            . '_' . \Carbon\Carbon::parse($pelanggaran->tanggal_kejadian)->format('Ymd') . '.pdf';
+
+        return $pdf->download($namaFile);
+    }
+    public function selesaikan($id)
+    {
+        $pelanggaran = PelanggaranSiswa::findOrFail($id);
+
+        if ($pelanggaran->status !== 'disetujui') {
+            return back()->with('error', 'Hanya pelanggaran yang sudah disetujui yang bisa ditandai selesai.');
+        }
+
+        DB::transaction(function () use ($pelanggaran) {
+            $pelanggaran->update(['status' => 'selesai']);
+
+            TindakLanjutPelanggaran::create([
+                'pelanggaran_id' => $pelanggaran->id,
+                'oleh_user_id'   => Auth::id(),
+                'catatan'        => 'Tindak lanjut dieksekusi. Status diubah menjadi selesai oleh ' . (Auth::user()->nama ?? 'BK'),
+                'status_baru'    => 'selesai',
+            ]);
+        });
+
+        return back()->with('success', 'Pelanggaran berhasil ditandai selesai.');
     }
 }

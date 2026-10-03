@@ -162,10 +162,6 @@ public function bk(Request $request)
 {
     $user = Auth::user();
 
-    if ($user->is_koordinator_bk) {
-        return view('admin.koordinator-bk.dashboard', compact('user'));
-    }
-
     // ============================================================
     // A. DATA UNTUK FORM PRESENSI (accordion)
     // ============================================================

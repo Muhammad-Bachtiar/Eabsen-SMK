@@ -87,6 +87,12 @@ Route::middleware(['auth', 'role:admin,guru'])->prefix('guru')->name('guru.')->g
 Route::middleware(['auth', 'role:admin,bk'])->prefix('koordinator-bk')->name('koordinator-bk.')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'koordinatorBk'])->name('dashboard');
     Route::resource('jenis-pelanggaran', \App\Http\Controllers\KoordinatorBk\JenisPelanggaranController::class);
+    Route::get('approval-pelanggaran',
+        [\App\Http\Controllers\Waka\ApprovalPelanggaranController::class, 'index'])
+        ->name('approval.index');
+    Route::post('approval-pelanggaran/{id}/proses',
+        [\App\Http\Controllers\Waka\ApprovalPelanggaranController::class, 'proses'])
+        ->name('approval.proses');
 });
 
 /*
@@ -108,6 +114,12 @@ Route::middleware(['auth', 'role:admin,bk'])->prefix('bk')->name('bk.')->group(f
     // 2. Rekap Presensi Tiap Kelas (Gabungan Mapel + BK)
     Route::get('rekap-presensi', [\App\Http\Controllers\Bk\RekapPresensiBkController::class, 'index'])->name('rekap_presensi.index');
     Route::get('rekap-presensi/export-pdf', [\App\Http\Controllers\Bk\RekapPresensiBkController::class, 'exportPdf'])->name('rekap_presensi.export_pdf');
+    Route::get('pelanggaran/{id}/detail', [\App\Http\Controllers\Bk\PelanggaranController::class, 'show'])
+    ->name('pelanggaran.show');
+    Route::get('pelanggaran/{id}/cetak-pdf', [\App\Http\Controllers\Bk\PelanggaranController::class, 'cetakPdf'])
+    ->name('pelanggaran.cetak_pdf');
+    Route::post('pelanggaran/{id}/selesaikan', [\App\Http\Controllers\Bk\PelanggaranController::class, 'selesaikan'])
+    ->name('pelanggaran.selesaikan');
     Route::resource('pelanggaran', \App\Http\Controllers\Bk\PelanggaranController::class);
 });
 
@@ -117,9 +129,10 @@ Route::middleware(['auth', 'role:admin,bk'])->prefix('bk')->name('bk.')->group(f
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth', 'role:admin,waka_kesiswaan'])->prefix('waka')->name('waka.')->group(function () {
+Route::middleware(['auth', 'role:admin,waka_kesiswaan,bk'])->prefix('waka')->name('waka.')->group(function () {
     // Dashboard Waka Kesiswaan
     Route::get('/dashboard', [DashboardController::class, 'waka'])->name('dashboard');
+
     // Rekap Presensi Seluruh Kelas/Jurusan
     Route::get('rekap-presensi', [\App\Http\Controllers\Waka\RekapPresensiController::class, 'index'])->name('rekap_presensi.index');
     // Nanti rute persetujuan (approval) pelanggaran masuk ke sini
@@ -127,6 +140,11 @@ Route::middleware(['auth', 'role:admin,waka_kesiswaan'])->prefix('waka')->name('
     Route::get('approval-pelanggaran', [\App\Http\Controllers\Waka\ApprovalPelanggaranController::class, 'index'])->name('approval.index');
     // Proses Setujui / Tolak
     Route::post('approval-pelanggaran/{id}/proses', [\App\Http\Controllers\Waka\ApprovalPelanggaranController::class, 'proses'])->name('approval.proses');
+        // Detail pelanggaran (bisa diakses admin, waka, koordinator BK)
+    Route::get('pelanggaran/{id}/detail', [\App\Http\Controllers\Bk\PelanggaranController::class, 'show'])
+        ->name('pelanggaran.detail');
+    Route::get('pelanggaran/{id}/cetak-pdf', [\App\Http\Controllers\Bk\PelanggaranController::class, 'cetakPdf'])
+        ->name('pelanggaran.cetak_pdf');
 });
 
 /*

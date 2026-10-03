@@ -51,7 +51,7 @@ class AuthController extends Controller
 
         return match ($role) {
             'guru'            => 'guru.dashboard',
-            'bk'              => $user->is_koordinator_bk ? 'koordinator-bk.dashboard' : 'bk.dashboard',
+            'bk'              => 'bk.dashboard',
             'waka_kesiswaan'  => 'waka.dashboard',
             'kepala_sekolah'  => 'kepsek.dashboard',
             default           => 'admin.dashboard',

@@ -1,16 +1,25 @@
 @extends('layouts.app')
 
-@section('header_title', 'Dashboard Bimbingan Konseling')
+@section('header_title', $user->is_koordinator_bk ? 'Dashboard Koordinator BK' : 'Dashboard Bimbingan Konseling')
 
 @section('content')
 <div class="page-content">
     <!-- Welcome Banner -->
     <div class="row">
         <div class="col-12">
-            <div class="card bg-info text-white mb-4">
+            <div class="card {{ $user->is_koordinator_bk ? 'bg-primary' : 'bg-info' }} text-white mb-4">
                 <div class="card-body p-4">
-                    <h4 class="text-white fw-bold">Panel Bimbingan & Konseling (BK)</h4>
-                    <p class="mb-0">Selamat datang, {{ $user->nama ?? $user->name }}. Pantau kedisiplinan, rekap poin pelanggaran, dan tindak lanjut siswa di sini.</p>
+                    <h4 class="text-white fw-bold">
+                        {{ $user->is_koordinator_bk ? 'Panel Koordinator (BK)' : 'Panel Bimbingan & Konseling (BK)' }}
+                    </h4>
+                    <p class="mb-0">
+                        Selamat datang, {{ $user->nama ?? $user->name }}.
+                        @if($user->is_koordinator_bk)
+                            Kelola master jenis pelanggaran, pantau kedisiplinan, dan lakukan presensi kelas di sini.
+                        @else
+                            Pantau kedisiplinan, rekap poin pelanggaran, dan tindak lanjut siswa di sini.
+                        @endif
+                    </p>
                 </div>
             </div>
         </div>
@@ -109,7 +118,7 @@
     </div>
 
     <!-- Cards Statistik Mazer -->
-    <div class="row">
+    <!-- <div class="row">
         <div class="col-6 col-lg-4 col-md-6">
             <div class="card">
                 <div class="card-body px-4 py-4-5">
@@ -161,12 +170,12 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> -->
 
     <!-- Grid Tengah: Kelas Binaan & Alpha Monitor -->
-    <div class="row">
+    <!-- <div class="row"> -->
         <!-- Widget Kelas Binaan -->
-        <div class="col-12 col-xl-6 mb-4">
+        <!-- <div class="col-12 col-xl-6 mb-4">
             <div class="card h-100">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4 class="card-title mb-0">
@@ -194,10 +203,10 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div> -->
 
         <!-- Alert Siswa Sering Alpha -->
-        <div class="col-12 col-xl-6 mb-4">
+        <!-- <div class="col-12 col-xl-6 mb-4">
             <div class="card h-100">
                 <div class="card-header">
                     <h4 class="card-title mb-0"><i class="bi bi-bell-fill text-danger me-2"></i>Pantauan Siswa Sering Alpha</h4>
@@ -220,10 +229,10 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> -->
 
     <!-- Grid Bawah: Riwayat Pelanggaran Terbaru -->
-    <div class="row">
+    <!-- <div class="row">
         <div class="col-12">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
@@ -275,7 +284,7 @@
             </div>
         </div>
     </div>
-</div>
+</div> -->
 @push('scripts')
 <script>
 $(document).ready(function () {
