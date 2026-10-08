@@ -67,8 +67,8 @@
         }
 
         .form-control-xl {
-            padding-left: 2.8rem !important;
-            padding-right: 2.8rem !important;
+            padding-left: 2.5rem !important;    /* dari 2.8rem → 2.5rem */
+            padding-right: 2.5rem !important;
             height: 48px;
             font-size: 0.95rem;
             background-color: #ffffff !important;
@@ -84,7 +84,7 @@
             position: absolute !important;
             top: 50% !important;
             transform: translateY(-50%) !important;
-            left: 1rem !important;
+            left: 0.85rem !important;    /* dari 1rem → 0.85rem */
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
@@ -94,13 +94,13 @@
         }
 
         .form-control-icon i {
-            font-size: 1.15rem;
+            font-size: 0.95rem;    /* dari 1.15rem → 0.95rem */
             line-height: 1;
         }
 
         .password-toggle-btn {
             position: absolute !important;
-            right: 0.8rem !important;
+            right: 0.85rem !important;    /* dari 0.8rem → 0.85rem */
             top: 50% !important;
             transform: translateY(-50%) !important;
             border: none;
@@ -112,6 +112,12 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            line-height: 1;
+        }
+
+        .password-toggle-btn i {
+            font-size: 0.95rem;    /* ikon mata juga diperkecil */
+            line-height: 1;
         }
 
         .password-toggle-btn:hover {
@@ -254,7 +260,7 @@
                                         id="togglePassword" 
                                         tabindex="-1" 
                                         title="Lihat/Sembunyikan Password">
-                                    <i class="bi bi-eye fs-5" id="toggleIcon"></i>
+                                    <i class="bi bi-eye" id="toggleIcon"></i>
                                 </button>
                             </div>
 
