@@ -180,7 +180,6 @@ class GuruController extends Controller
             }
 
             // Menyusun Pesan Response
-            // Menyusun Pesan Response
             $pesanBerhasil = "Berhasil mengimport {$insertedCount} data pengajar/staf.";
 
             if (!empty($warnings)) {
@@ -205,7 +204,7 @@ class GuruController extends Controller
      */
     public function downloadTemplate()
     {
-        $filePath = public_path('templates/template_guru.xlsx');
+        $filePath = public_path('template/template_guru.xlsx');
 
         if (file_exists($filePath)) {
             return response()->download($filePath);

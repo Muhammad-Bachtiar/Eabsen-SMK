@@ -5,7 +5,6 @@
 
 @push('styles')
 <style>
-    /* Stats Icon - pastikan icon berada di dalam kotak/lingkaran */
     .stats-icon {
         width: 48px;
         height: 48px;
@@ -64,7 +63,7 @@
         line-height: 1;
     }
 
-    /* Profile card - simetris dengan card lain */
+    /* Profile card */
     .profile-card .avatar.avatar-xl {
         width: 64px;
         height: 64px;
@@ -76,9 +75,9 @@
 @section('content')
 <section class="row">
     <!-- Kolom Kiri: Metrik Utama, Grafik & Tabel Aktivitas -->
-    <div class="col-12 col-lg-9">
+    <!-- <div class="col-12 col-lg-9"> -->
         <!-- 1. Row Kartu Statistik Mazer Baris 1 -->
-        <div class="row">
+        <!-- <div class="row">
             <div class="col-6 col-lg-3 col-md-6">
                 <div class="card shadow-sm hover-elevate">
                     <div class="card-body px-4 py-4-5">
@@ -100,9 +99,9 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> -->
 
-            <div class="col-6 col-lg-3 col-md-6">
+            <!-- <div class="col-6 col-lg-3 col-md-6">
                 <div class="card shadow-sm hover-elevate">
                     <div class="card-body px-4 py-4-5">
                         <div class="row">
@@ -123,9 +122,9 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> -->
 
-            <div class="col-6 col-lg-3 col-md-6">
+            <!-- <div class="col-6 col-lg-3 col-md-6">
                 <div class="card shadow-sm hover-elevate">
                     <div class="card-body px-4 py-4-5">
                         <div class="row">
@@ -146,9 +145,9 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> -->
 
-            <div class="col-6 col-lg-3 col-md-6">
+            <!-- <div class="col-6 col-lg-3 col-md-6">
                 <div class="card shadow-sm hover-elevate">
                     <div class="card-body px-4 py-4-5">
                         <div class="row">
@@ -170,10 +169,10 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div> -->
 
         <!-- 2. Row Kartu Statistik Baris 2 -->
-        <div class="row">
+        <!-- <div class="row">
             <div class="col-6 col-lg-4 col-md-6">
                 <div class="card shadow-sm bg-light-info border border-info border-opacity-25">
                     <div class="card-body py-3 px-3">
@@ -221,7 +220,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div> -->
 
         <!-- 3. Grafik Aktivitas Presensi ApexCharts -->
         <div class="row">
@@ -299,9 +298,9 @@
     </div>
 
     <!-- Kolom Kanan: Profil, Donut Chart Gender, Jam Pelajaran & Quick Menu -->
-    <div class="col-12 col-lg-3">
+    <!-- <div class="col-12 col-lg-3"> -->
         <!-- Profil Card -->
-        <div class="card shadow-sm profile-card">
+        <!-- <div class="card shadow-sm profile-card">
             <div class="card-body py-4 px-4">
                 <div class="d-flex align-items-center">
                     <div class="bg-primary text-white rounded-circle shadow" style="width: 64px; height: 64px; min-width: 64px; display: flex; align-items: center; justify-content: center;">
@@ -324,7 +323,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div> -->
 
         <!-- Donut Chart Gender Siswa -->
         <div class="card shadow-sm">
