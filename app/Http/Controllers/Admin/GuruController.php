@@ -38,6 +38,7 @@ class GuruController extends Controller
             'password' => 'required|min:6',
             'role_id'  => 'required|exists:roles,id',
             'nip_nik'  => 'nullable|string|max:50',
+            'is_koordinator_bk' => 'nullable|boolean',
         ]);
 
         User::create([
@@ -46,6 +47,7 @@ class GuruController extends Controller
             'password' => Hash::make($request->password),
             'role_id'  => $request->role_id,
             'nip_nik'  => $request->nip_nik,
+            'is_koordinator_bk' => $request->has('is_koordinator_bk'),
         ]);
 
         return redirect()->route('admin.guru.index')->with('success', 'Akun pengajar/staf berhasil ditambahkan!');
@@ -71,6 +73,7 @@ class GuruController extends Controller
             'email'    => 'required|email|unique:users,email,' . $id,
             'role_id'  => 'required|exists:roles,id',
             'nip_nik'  => 'nullable|string|max:50',
+            'is_koordinator_bk' => 'nullable|boolean',
         ]);
 
         $data = [
@@ -78,6 +81,7 @@ class GuruController extends Controller
             'email'   => $request->email,
             'role_id' => $request->role_id,
             'nip_nik' => $request->nip_nik,
+            'is_koordinator_bk' => $request->has('is_koordinator_bk'),
         ];
 
         if ($request->filled('password')) {
@@ -156,11 +160,15 @@ class GuruController extends Controller
                     continue;
                 }
 
+                $isKoordinator = false;
                 // Normalisasi Role
                 if (in_array($roleRaw, ['waka', 'waka kesiswaan', 'waka_kesiswaan'])) {
                     $roleRaw = 'waka_kesiswaan';
                 } elseif (in_array($roleRaw, ['kepsek', 'kepala sekolah', 'kepala_sekolah'])) {
                     $roleRaw = 'kepala_sekolah';
+                } elseif (in_array($roleRaw, ['koordinator bk', 'koordinator_bk'])) {
+                    $roleRaw = 'bk';
+                    $isKoordinator = true;
                 } elseif (in_array($roleRaw, ['bk', 'guru bk'])) {
                     $roleRaw = 'bk';
                 }
@@ -174,6 +182,7 @@ class GuruController extends Controller
                     'email'    => $email,
                     'password' => Hash::make($row['password'] ?? '123456'),
                     'role_id'  => $roleId,
+                    'is_koordinator_bk'  => $isKoordinator,
                 ]);
 
                 $insertedCount++;

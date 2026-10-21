@@ -13,7 +13,7 @@
                 @csrf
                 <div class="mb-3">
                     <label class="form-label text-muted small mb-1">NIP / NIK</label>
-                    <input type="text" name="nip_nik" class="form-control" placeholder="Contoh: 198501012010011001" value="{{ old('nip_nik') }}">
+                    <input type="text" name="nip_nik" class="form-control" placeholder="Contoh: 198501012010011001" value="{{ old('nip_nik') }}" maxlength="16">
                 </div>
 
                 <div class="mb-3">
@@ -52,6 +52,15 @@
                         @endforeach
                     </select>
                 </div>
+                <div class="mb-4" id="wrapper_koordinator" style="display: none;">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" name="is_koordinator_bk" value="1" id="is_koordinator_bk" {{ old('is_koordinator_bk') ? 'checked' : '' }}>
+                        <label class="form-check-label fw-bold" for="is_koordinator_bk">
+                            Jadikan sebagai Koordinator BK
+                        </label>
+                    </div>
+                    <small class="text-muted d-block mt-1">Centang jika akun ini bertugas sebagai Koordinator BK (mengelola master pelanggaran).</small>
+                </div>
 
                 <div class="d-flex gap-2">
                     <button type="submit" class="btn btn-primary px-4">
@@ -69,20 +78,54 @@
 
 @push('scripts')
 <script>
-    $(document).ready(function() {
-        $('#togglePassword').click(function() {
-            let passwordInput = $('#passwordInput');
-            let eyeIcon = $('#eyeIcon');
+    // Gunakan DOMContentLoaded agar script jalan setelah HTML selesai dimuat
+    document.addEventListener("DOMContentLoaded", function () {
+        
+        // 1. Toggle Password
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('passwordInput');
+        const eyeIcon = document.getElementById('eyeIcon');
 
-            // Cek tipe input saat ini
-            if (passwordInput.attr('type') === 'password') {
-                passwordInput.attr('type', 'text');
-                eyeIcon.removeClass('bi-eye-slash').addClass('bi-eye');
-            } else {
-                passwordInput.attr('type', 'password');
-                eyeIcon.removeClass('bi-eye').addClass('bi-eye-slash');
+        if (togglePassword && passwordInput && eyeIcon) {
+            togglePassword.addEventListener('click', function (e) {
+                e.preventDefault();
+                
+                // Cek tipe input saat ini
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                
+                // Ganti ikon mata
+                if (type === 'text') {
+                    eyeIcon.classList.remove('bi-eye-slash');
+                    eyeIcon.classList.add('bi-eye');
+                } else {
+                    eyeIcon.classList.remove('bi-eye');
+                    eyeIcon.classList.add('bi-eye-slash');
+                }
+            });
+        }
+
+        // 2. Toggle Checkbox Koordinator BK (Dari patch sebelumnya)
+        // Pastikan form role_id punya id="role_id"
+        const roleSelect = document.querySelector('select[name="role_id"]');
+        const wrapperKoordinator = document.getElementById('wrapper_koordinator');
+
+        if (roleSelect && wrapperKoordinator) {
+            function cekRoleBK() {
+                let selectedRoleText = roleSelect.options[roleSelect.selectedIndex].text.toLowerCase();
+                if (selectedRoleText.includes('bimbingan konseling')) {
+                    wrapperKoordinator.style.display = 'block'; // Tampilkan
+                } else {
+                    wrapperKoordinator.style.display = 'none'; // Sembunyikan
+                    const checkbox = document.getElementById('is_koordinator_bk');
+                    if(checkbox) checkbox.checked = false;
+                }
             }
-        });
+
+            // Panggil saat pertama kali load dan saat diganti
+            cekRoleBK();
+            roleSelect.addEventListener('change', cekRoleBK);
+        }
     });
 </script>
 @endpush
